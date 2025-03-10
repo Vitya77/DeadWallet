@@ -1,0 +1,43 @@
+# Ігнорувати тимчасові файли Visual Studio
+.vs/
+
+# Ігнорувати результати збірки
+bin/
+obj/
+
+# Ігнорувати файли налаштувань користувача
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Ігнорувати файли резервних копій
+*.backup
+*.bak
+
+# Ігнорувати файли пакетів NuGet
+**/[Pp]ackages/*
+!**/[Pp]ackages/repositories.config
+.nuget/
+*.nupkg
+NuGet.exe
+NuGet.Config
+
+# Ігнорувати файли середовища
+.env
+*.env.*
+
+# Ігнорувати файли логів
+*.log
+*.log.*
+
+# Ігнорувати файли тестів
+TestResults/
+
+# Ігнорувати файли IDE
+.idea/
+*.swp
+*.swo
+
+# Ігнорувати файли Azure
+.azure/
