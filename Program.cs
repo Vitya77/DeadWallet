@@ -1,7 +1,14 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Serilog;
 using DeadWaller.Data;
 var builder = WebApplication.CreateBuilder(args);
+
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 builder.Services.AddDbContext<DeadWallerContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DeadWallerContext") ?? throw new InvalidOperationException("Connection string 'DeadWallerContext' not found.")));
 
