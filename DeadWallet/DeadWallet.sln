@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeadWallet.DAL", "DeadWalle
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeadWallet.BLL", "DeadWallet.BLL\DeadWallet.BLL.csproj", "{87232D86-6FEB-4843-BC0F-CAC376F8DB55}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeadWallet.Tests", "DeadWallet.Tests\DeadWallet.Tests.csproj", "{49C89AE3-BD15-38C0-8C41-9FD83A8E610B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{87232D86-6FEB-4843-BC0F-CAC376F8DB55}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{87232D86-6FEB-4843-BC0F-CAC376F8DB55}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{87232D86-6FEB-4843-BC0F-CAC376F8DB55}.Release|Any CPU.Build.0 = Release|Any CPU
+		{49C89AE3-BD15-38C0-8C41-9FD83A8E610B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49C89AE3-BD15-38C0-8C41-9FD83A8E610B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49C89AE3-BD15-38C0-8C41-9FD83A8E610B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49C89AE3-BD15-38C0-8C41-9FD83A8E610B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

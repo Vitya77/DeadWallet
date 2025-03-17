@@ -2,6 +2,13 @@
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using DeadWallet.DAL;
+using DeadWallet.DAL.Models;
+using Microsoft.AspNetCore.Identity;
+using DeadWallet.BLL.Services;
+using DeadWallet.DAL.Repositories;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 Log.Logger = new LoggerConfiguration()
@@ -11,6 +18,39 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 builder.Services.AddDbContext<DeadWalletContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DeadWallerContext") ?? throw new InvalidOperationException("Connection string 'DeadWallerContext' not found.")));
+
+//Password hasher injection
+builder.Services.AddScoped<IPasswordHasher<DeadWalletUser>, PasswordHasher<DeadWalletUser>>();
+
+//Repositories injection
+builder.Services.AddScoped<UserRepository, UserRepository>();
+
+//Services injection
+builder.Services.AddScoped<UserService, UserService>();
+
+//JWT auth injection
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultScheme = "Cookies";
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddCookie("Cookies", options =>
+{
+    options.LoginPath = "/Auth/Login"; // Optional: Set the path for login redirection if needed.
+})
+.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"] ?? throw new InvalidOperationException("JWT:Secretkey string not found.")))
+    };
+});
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();

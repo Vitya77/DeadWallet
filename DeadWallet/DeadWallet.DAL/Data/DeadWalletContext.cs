@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using DeadWallet.DAL.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace DeadWallet.DAL
@@ -12,5 +13,6 @@ namespace DeadWallet.DAL
             : base(options)
         {
         }
+        public DbSet<DeadWalletUser> DeadWalletUsers { get; set; }
     }
 }
