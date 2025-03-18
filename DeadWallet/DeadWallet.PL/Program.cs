@@ -5,10 +5,12 @@ using DeadWallet.DAL;
 using DeadWallet.DAL.Models;
 using Microsoft.AspNetCore.Identity;
 using DeadWallet.BLL.Services;
+
 using DeadWallet.DAL.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using DeadWallet.DAL.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,7 +26,7 @@ builder.Services.AddDbContext<DeadWalletContext>(options =>
 builder.Services.AddScoped<IPasswordHasher<DeadWalletUser>, PasswordHasher<DeadWalletUser>>();
 
 // Repositories injection
-builder.Services.AddScoped<UserRepository, UserRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 // Services injection
 builder.Services.AddScoped<UserService, UserService>();
