@@ -69,5 +69,56 @@ namespace DeadWallet.PL.Controllers
                 return View(model);
             }
         }
+        
+        [HttpGet]
+        public IActionResult Login()
+        {
+            _logger.LogInformation("User visited login form");
+            return View(new LoginViewModel());
+        }
+        
+        [HttpPost]
+        public async Task<IActionResult> Login(LoginViewModel model)
+        {
+            _logger.LogInformation("User submitted login form");
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var loginModel = new LoginModel
+                    {
+                        Username = model.Username,
+                        Password = model.Password
+                    };
+
+                    var token = await _userService.LoginAsync(loginModel);
+
+                    if (token != null)
+                    {
+                        _logger.LogInformation("User was given a token");
+                        Response.Cookies.Append("AuthToken", token, new CookieOptions
+                        {
+                            HttpOnly = true,
+                            Secure = true,
+                            SameSite = SameSiteMode.Strict,
+                            Expires = DateTime.UtcNow.AddDays(7)
+                        });
+
+                        return RedirectToAction("Index", "Home");
+                    }
+
+                    ModelState.AddModelError("", "Login failed.");
+                }
+
+                _logger.LogWarning("Submitted data was invalid");
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                ModelState.AddModelError("", ex.Message);
+                return View(model);
+            }
+        }
     }
 }

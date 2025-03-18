@@ -84,5 +84,26 @@ namespace DeadWallet.BLL.Services
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+        
+        
+        public async Task<string> LoginAsync(LoginModel model)
+        {
+            // Find the user by username
+            var user = await _userRepository.FindUserByUsernameAsync(model.Username);
+            if (user == null)
+            {
+                throw new Exception("Invalid username or password");
+            }
+
+            // Verify the password
+            var passwordVerificationResult = _passwordHasher.VerifyHashedPassword(user, user.Password, model.Password);
+            if (passwordVerificationResult == PasswordVerificationResult.Failed)
+            {
+                throw new Exception("Invalid username or password");
+            }
+
+            // Generate JWT token
+            return GenerateJwtToken(user);
+        }
     }
 }
