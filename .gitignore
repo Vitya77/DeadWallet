@@ -16,9 +16,6 @@ project.json
 *.userprefs
 *.dbmdl
 
-# ASP.NET Temporary Files
-wwwroot/
-
 # Windows Installer Files
 *.cab
 *.msi
