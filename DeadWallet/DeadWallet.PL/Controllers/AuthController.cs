@@ -3,6 +3,7 @@ using DeadWallet.BLL.Models;
 using Microsoft.AspNetCore.Mvc;
 using DeadWallet.PL.Models;
 using DeadWaller.Controllers;
+using Microsoft.AspNetCore.Authorization;
 
 namespace DeadWallet.PL.Controllers
 {
