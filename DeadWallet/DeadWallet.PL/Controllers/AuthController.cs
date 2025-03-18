@@ -24,12 +24,6 @@ namespace DeadWallet.PL.Controllers
             return View(new RegistrationViewModel());
         }
 
-        [Authorize]
-        public IActionResult Test()
-        {
-            return Ok(new { User.Identity.IsAuthenticated, User.Identity.Name, Claims = User.Claims.Select(c => new { c.Type, c.Value }) });
-        }
-
         [HttpPost]
         public async Task<IActionResult> Register(RegistrationViewModel model)
         {
