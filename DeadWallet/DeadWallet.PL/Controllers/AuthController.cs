@@ -3,6 +3,7 @@ using DeadWallet.BLL.Models;
 using Microsoft.AspNetCore.Mvc;
 using DeadWallet.PL.Models;
 using DeadWaller.Controllers;
+using Microsoft.AspNetCore.Authorization;
 
 namespace DeadWallet.PL.Controllers
 {
@@ -21,6 +22,12 @@ namespace DeadWallet.PL.Controllers
         {
             _logger.LogInformation("User visited registration form");
             return View(new RegistrationViewModel());
+        }
+
+        [Authorize]
+        public IActionResult Test()
+        {
+            return Ok(new { User.Identity.IsAuthenticated, User.Identity.Name, Claims = User.Claims.Select(c => new { c.Type, c.Value }) });
         }
 
         [HttpPost]

@@ -9,6 +9,7 @@ using DeadWallet.DAL.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+
 var builder = WebApplication.CreateBuilder(args);
 
 Log.Logger = new LoggerConfiguration()
@@ -19,16 +20,16 @@ builder.Host.UseSerilog();
 builder.Services.AddDbContext<DeadWalletContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DeadWallerContext") ?? throw new InvalidOperationException("Connection string 'DeadWallerContext' not found.")));
 
-//Password hasher injection
+// Password hasher injection
 builder.Services.AddScoped<IPasswordHasher<DeadWalletUser>, PasswordHasher<DeadWalletUser>>();
 
-//Repositories injection
+// Repositories injection
 builder.Services.AddScoped<UserRepository, UserRepository>();
 
-//Services injection
+// Services injection
 builder.Services.AddScoped<UserService, UserService>();
 
-//JWT auth injection
+// JWT auth injection
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultScheme = "Cookies";
@@ -36,7 +37,7 @@ builder.Services.AddAuthentication(options =>
 })
 .AddCookie("Cookies", options =>
 {
-    options.LoginPath = "/Auth/Login"; // Optional: Set the path for login redirection if needed.
+    options.LoginPath = "/Auth/Login";
 })
 .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
 {
@@ -48,7 +49,21 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
         ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"] ?? throw new InvalidOperationException("JWT:Secretkey string not found.")))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"] ?? throw new InvalidOperationException("JWT:SecretKey string not found.")))
+    };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnTokenValidated = context =>
+        {
+            Console.WriteLine($"✅ Token validated! User: {context.Principal.Identity?.Name}");
+            return Task.CompletedTask;
+        },
+        OnAuthenticationFailed = context =>
+        {
+            Console.WriteLine($"❌ Authentication failed: {context.Exception.Message}");
+            return Task.CompletedTask;
+        }
     };
 });
 
@@ -61,14 +76,38 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
 app.UseRouting();
 
+// Middleware для зчитування JWT з куки
+app.Use(async (context, next) =>
+{
+    var token = context.Request.Cookies["AuthToken"];
+    if (!string.IsNullOrEmpty(token))
+    {
+        Console.WriteLine($"🔹 JWT з кукі: {token}");
+        context.Request.Headers.Authorization = "Bearer " + token;
+    }
+    else
+    {
+        Console.WriteLine("🔸 JWT не знайдено в кукі");
+    }
+    await next();
+});
+
+// Додаємо аутентифікацію перед авторизацією
+app.UseAuthentication();
 app.UseAuthorization();
+
+app.Use(async (context, next) =>
+{
+    Console.WriteLine($"➡️ Перед `next()`: User.Identity.IsAuthenticated = {context.User.Identity?.IsAuthenticated}");
+    await next();
+    Console.WriteLine($"⬅️ Після `next()`: User.Identity.IsAuthenticated = {context.User.Identity?.IsAuthenticated}");
+});
 
 app.MapStaticAssets();
 
@@ -76,6 +115,5 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
-
 
 app.Run();
