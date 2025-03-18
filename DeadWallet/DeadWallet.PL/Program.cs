@@ -56,12 +56,10 @@ builder.Services.AddAuthentication(options =>
     {
         OnTokenValidated = context =>
         {
-            Console.WriteLine($"✅ Token validated! User: {context.Principal.Identity?.Name}");
             return Task.CompletedTask;
         },
         OnAuthenticationFailed = context =>
         {
-            Console.WriteLine($"❌ Authentication failed: {context.Exception.Message}");
             return Task.CompletedTask;
         }
     };
@@ -82,18 +80,12 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 
-// Middleware для зчитування JWT з куки
 app.Use(async (context, next) =>
 {
     var token = context.Request.Cookies["AuthToken"];
     if (!string.IsNullOrEmpty(token))
     {
-        Console.WriteLine($"🔹 JWT з кукі: {token}");
         context.Request.Headers.Authorization = "Bearer " + token;
-    }
-    else
-    {
-        Console.WriteLine("🔸 JWT не знайдено в кукі");
     }
     await next();
 });
@@ -101,13 +93,6 @@ app.Use(async (context, next) =>
 // Додаємо аутентифікацію перед авторизацією
 app.UseAuthentication();
 app.UseAuthorization();
-
-app.Use(async (context, next) =>
-{
-    Console.WriteLine($"➡️ Перед `next()`: User.Identity.IsAuthenticated = {context.User.Identity?.IsAuthenticated}");
-    await next();
-    Console.WriteLine($"⬅️ Після `next()`: User.Identity.IsAuthenticated = {context.User.Identity?.IsAuthenticated}");
-});
 
 app.MapStaticAssets();
 
