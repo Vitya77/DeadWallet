@@ -95,4 +95,104 @@ public class UserServiceTests
         Assert.NotNull(result);
         Assert.NotEmpty(result);
     }
+    
+    [Fact]
+public async Task LoginAsync_UserDoesNotExist_ThrowsException()
+{
+    // Arrange
+    var loginModel = new LoginModel
+    {
+        Username = "nonExistingUser",
+        Password = "password123"
+    };
+
+    _mockUserRepository
+        .Setup(repo => repo.FindUserByUsernameAsync(loginModel.Username))
+        .ReturnsAsync((DeadWalletUser)null);
+
+    // Act & Assert
+    await Assert.ThrowsAsync<Exception>(() => _userService.LoginAsync(loginModel));
+}
+
+[Fact]
+    public async Task LoginAsync_InvalidPassword_ThrowsException()
+    {
+        // Arrange
+        var loginModel = new LoginModel
+        {
+            
+            Username = "existingUser",
+            Password = "wrongPassword"
+        };
+
+        var user = new DeadWalletUser
+        {
+            FirstName = "Jane",
+            LastName = "Doe",
+            Username = "existingUser",
+            Password = "hashedPassword"
+        };
+
+        _mockUserRepository
+            .Setup(repo => repo.FindUserByUsernameAsync(loginModel.Username))
+            .ReturnsAsync(user);
+
+        _mockPasswordHasher
+            .Setup(hasher => hasher.VerifyHashedPassword(user, user.Password, loginModel.Password))
+            .Returns(PasswordVerificationResult.Failed);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<Exception>(() => _userService.LoginAsync(loginModel));
+    }
+
+    [Fact]
+    public async Task LoginAsync_ValidCredentials_ReturnsJwtToken()
+    {
+        // Arrange
+        var loginModel = new LoginModel
+        {
+            Username = "existingUser",
+            Password = "correctPassword"
+        };
+
+        var user = new DeadWalletUser
+        {   
+            FirstName = "Jane",
+            LastName = "Doe",
+            Username = "existingUser",
+            Password = "hashedPassword"
+        };
+
+        _mockUserRepository
+            .Setup(repo => repo.FindUserByUsernameAsync(loginModel.Username))
+            .ReturnsAsync(user);
+
+        _mockPasswordHasher
+            .Setup(hasher => hasher.VerifyHashedPassword(user, user.Password, loginModel.Password))
+            .Returns(PasswordVerificationResult.Success);
+
+        _mockConfiguration
+            .Setup(config => config["Jwt:SecretKey"])
+            .Returns("your-secret-key-with-at-least-32-chars");
+
+        _mockConfiguration
+            .Setup(config => config["Jwt:ExpirationTimeDays"])
+            .Returns("7");
+
+        _mockConfiguration
+            .Setup(config => config["Jwt:Issuer"])
+            .Returns("TestIssuer");
+
+        _mockConfiguration
+            .Setup(config => config["Jwt:Audience"])
+            .Returns("TestAudience");
+
+        // Act
+        var result = await _userService.LoginAsync(loginModel);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotEmpty(result);
+    }
+    
 }

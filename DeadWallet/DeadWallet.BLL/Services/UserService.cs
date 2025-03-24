@@ -17,11 +17,11 @@ namespace DeadWallet.BLL.Services
 {
     public class UserService
     {
-        private readonly UserRepository _userRepository;
+        private readonly IUserRepository _userRepository;
         private readonly IPasswordHasher<DeadWalletUser> _passwordHasher;
         private readonly IConfiguration _configuration;
 
-        public UserService(UserRepository userRepository, IPasswordHasher<DeadWalletUser> passwordHasher, IConfiguration configuration)
+        public UserService(IUserRepository userRepository, IPasswordHasher<DeadWalletUser> passwordHasher, IConfiguration configuration)
         {
             _userRepository = userRepository;
             _passwordHasher = passwordHasher;
