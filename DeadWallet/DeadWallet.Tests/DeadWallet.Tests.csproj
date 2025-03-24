@@ -20,6 +20,7 @@
   <ItemGroup>
     <ProjectReference Include="..\DeadWallet.BLL\DeadWallet.BLL.csproj" />
     <ProjectReference Include="..\DeadWallet.DAL\DeadWallet.DAL.csproj" />
+    <ProjectReference Include="..\DeadWallet.PL\DeadWallet.PL.csproj" />
   </ItemGroup>
 
   <ItemGroup>

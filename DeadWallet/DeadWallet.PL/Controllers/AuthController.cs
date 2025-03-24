@@ -24,6 +24,15 @@ namespace DeadWallet.PL.Controllers
             return View(new RegistrationViewModel());
         }
 
+        [Authorize]
+        public IActionResult Logout()
+        {
+            _logger.LogInformation("User logout, detele auth token.");
+            Response.Cookies.Delete("AuthToken");
+            return RedirectToAction("Index", "Home");
+        }
+
+
         [HttpPost]
         public async Task<IActionResult> Register(RegistrationViewModel model)
         {
@@ -47,8 +56,8 @@ namespace DeadWallet.PL.Controllers
                         _logger.LogInformation("User was given a token");
                         Response.Cookies.Append("AuthToken", token, new CookieOptions
                         {
-                            HttpOnly = true,  
-                            Secure = true,    
+                            HttpOnly = true,
+                            Secure = true,
                             SameSite = SameSiteMode.Strict,
                             Expires = DateTime.UtcNow.AddDays(7)
                         });
