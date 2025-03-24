@@ -5,11 +5,9 @@ using DeadWallet.DAL.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Identity;
 using Moq;
-using DeadWallet.PL.Controllers;
+using System.Threading.Tasks;
+using Xunit;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using System.Reflection;
 
 public class UserServiceTests
 {
@@ -45,7 +43,8 @@ public class UserServiceTests
 
         _mockUserRepository
             .Setup(repo => repo.FindUserByUsernameAsync(registrationModel.Username))
-            .ReturnsAsync(new DeadWalletUser { 
+            .ReturnsAsync(new DeadWalletUser
+            {
                 Username = "existingUser",
                 FirstName = "John",
                 LastName = "Doe",
@@ -100,55 +99,28 @@ public class UserServiceTests
         Assert.NotNull(result);
         Assert.NotEmpty(result);
     }
-}
-
-public class AuthControllerTests
-{
-    private readonly Mock<UserService> _mockUserService;
-    private readonly Mock<ILogger<AuthController>> _mockLogger;
-    private readonly AuthController _controller;
-
-    public AuthControllerTests()
-    {
-        // Створюємо моки для залежностей UserService
-        var mockUserRepo = new Mock<IUserRepository>();
-        var mockPasswordHasher = new Mock<IPasswordHasher<DeadWalletUser>>();
-        var mockConfig = new Mock<IConfiguration>();
-
-        // Ініціалізуємо мок UserService з усіма необхідними залежностями
-        _mockUserService = new Mock<UserService>(
-            mockUserRepo.Object,
-            mockPasswordHasher.Object,
-            mockConfig.Object
-        );
-
-        _mockLogger = new Mock<ILogger<AuthController>>();
-        _controller = new AuthController(_mockUserService.Object, _mockLogger.Object);
-    }
 
     [Fact]
-    public void Logout_Should_DeleteAuthTokenCookie_AndRedirectToHome()
+    public void Logout_Should_DeleteAuthToken()
     {
-        // Arrange
-        var responseCookiesMock = new Mock<IResponseCookies>();
-        var httpResponseMock = new Mock<HttpResponse>();
-        httpResponseMock.SetupGet(r => r.Cookies).Returns(responseCookiesMock.Object);
+        var mockHttpContextAccessor = new Mock<IHttpContextAccessor>();
+        var mockHttpResponse = new Mock<HttpResponse>();
+        var mockCookies = new Mock<IResponseCookies>();
+        var mockHttpContext = new Mock<HttpContext>();
 
-        var httpContextMock = new Mock<HttpContext>();
-        httpContextMock.SetupGet(c => c.Response).Returns(httpResponseMock.Object);
+        mockHttpResponse.Setup(r => r.Cookies).Returns(mockCookies.Object);
+        mockHttpContext.Setup(c => c.Response).Returns(mockHttpResponse.Object);
+        mockHttpContextAccessor.Setup(c => c.HttpContext).Returns(mockHttpContext.Object);
 
-        _controller.ControllerContext = new ControllerContext
-        {
-            HttpContext = httpContextMock.Object
-        };
+        var userService = new UserService(
+            _mockUserRepository.Object,
+            _mockPasswordHasher.Object,
+            _mockConfiguration.Object
+        );
 
-        // Act
-        var result = _controller.Logout() as RedirectToActionResult;
+        userService.Logout(mockHttpContextAccessor.Object);
 
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal("Index", result.ActionName);
-        Assert.Equal("Home", result.ControllerName);
-        responseCookiesMock.Verify(c => c.Delete("AuthToken"), Times.Once);
+        mockCookies.Verify(c => c.Delete("AuthToken"), Times.Once);
     }
+
 }

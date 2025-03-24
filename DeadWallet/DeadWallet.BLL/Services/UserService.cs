@@ -12,6 +12,7 @@ using DeadWallet.BLL.Models;
 using DeadWallet.DAL.Models;
 using DeadWallet.DAL.Interfaces;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Http;
 
 namespace DeadWallet.BLL.Services
 {
@@ -83,6 +84,11 @@ namespace DeadWallet.BLL.Services
                 signingCredentials: creds);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        public void Logout(IHttpContextAccessor httpContextAccessor)
+        {
+            httpContextAccessor.HttpContext?.Response.Cookies.Delete("AuthToken");
         }
     }
 }

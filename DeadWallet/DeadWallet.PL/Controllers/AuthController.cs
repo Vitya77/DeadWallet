@@ -27,10 +27,14 @@ namespace DeadWallet.PL.Controllers
         [Authorize]
         public IActionResult Logout()
         {
-            _logger.LogInformation("User logout, detele auth token.");
-            Response.Cookies.Delete("AuthToken");
+            _logger.LogInformation("User logout, delete auth token.");
+
+            var httpContextAccessor = new HttpContextAccessor { HttpContext = HttpContext };
+            _userService.Logout(httpContextAccessor);
+
             return RedirectToAction("Index", "Home");
         }
+
 
 
         [HttpPost]
