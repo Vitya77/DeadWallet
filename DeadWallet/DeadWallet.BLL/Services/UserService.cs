@@ -59,7 +59,7 @@ namespace DeadWallet.BLL.Services
         {
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Username),
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
@@ -89,6 +89,27 @@ namespace DeadWallet.BLL.Services
         public void Logout(IHttpContextAccessor httpContextAccessor)
         {
             httpContextAccessor.HttpContext?.Response.Cookies.Delete("AuthToken");
+        }
+        
+        
+        public async Task<string> LoginAsync(LoginModel model)
+        {
+            // Find the user by username
+            var user = await _userRepository.FindUserByUsernameAsync(model.Username);
+            if (user == null)
+            {
+                throw new Exception("Invalid username or password");
+            }
+
+            // Verify the password
+            var passwordVerificationResult = _passwordHasher.VerifyHashedPassword(user, user.Password, model.Password);
+            if (passwordVerificationResult == PasswordVerificationResult.Failed)
+            {
+                throw new Exception("Invalid username or password");
+            }
+
+            // Generate JWT token
+            return GenerateJwtToken(user);
         }
     }
 }

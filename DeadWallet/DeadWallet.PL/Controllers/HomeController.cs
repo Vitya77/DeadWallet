@@ -15,10 +15,12 @@ public class HomeController : Controller
 
     public IActionResult Index()
     {
-        // Example using of logger
-        _logger.LogInformation("This is an information log message.");
-        _logger.LogWarning("This is a warning log message.");
-        _logger.LogError("This is an error log message.");
+        if (User.Identity.IsAuthenticated) 
+        {
+            _logger.LogInformation("User is authenticated, redirect to dashboard.");
+            return Redirect("/Dashboard");
+        }
+
         return View();
     }
 

@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using DeadWallet.DAL.Interfaces;
+using DeadWallet.BLL.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,9 +28,11 @@ builder.Services.AddScoped<IPasswordHasher<DeadWalletUser>, PasswordHasher<DeadW
 
 // Repositories injection
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IBudgetRepository, BudgetRepository>();
 
 // Services injection
 builder.Services.AddScoped<UserService, UserService>();
+builder.Services.AddScoped<IBudgetService, BudgetService>();
 
 // JWT auth injection
 builder.Services.AddAuthentication(options =>
