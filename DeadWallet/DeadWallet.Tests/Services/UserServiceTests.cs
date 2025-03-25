@@ -97,24 +97,24 @@ public class UserServiceTests
     }
     
     [Fact]
-public async Task LoginAsync_UserDoesNotExist_ThrowsException()
-{
-    // Arrange
-    var loginModel = new LoginModel
+    public async Task LoginAsync_UserDoesNotExist_ThrowsException()
     {
-        Username = "nonExistingUser",
-        Password = "password123"
-    };
-
-    _mockUserRepository
-        .Setup(repo => repo.FindUserByUsernameAsync(loginModel.Username))
-        .ReturnsAsync((DeadWalletUser)null);
-
-    // Act & Assert
-    await Assert.ThrowsAsync<Exception>(() => _userService.LoginAsync(loginModel));
-}
-
-[Fact]
+        // Arrange
+        var loginModel = new LoginModel
+        {
+            Username = "nonExistingUser",
+            Password = "password123"
+        };
+    
+        _mockUserRepository
+            .Setup(repo => repo.FindUserByUsernameAsync(loginModel.Username))
+            .ReturnsAsync((DeadWalletUser)null);
+    
+        // Act & Assert
+        await Assert.ThrowsAsync<Exception>(() => _userService.LoginAsync(loginModel));
+    }
+    
+    [Fact]
     public async Task LoginAsync_InvalidPassword_ThrowsException()
     {
         // Arrange
