@@ -1,0 +1,29 @@
+﻿@model DeadWallet.PL.Models.BudgetViewModel
+
+@{
+    ViewData["Title"] = "Create Budget";
+}
+
+<h2>Create a New Budget</h2>
+
+<form method="post" asp-action="CreateBudget">
+    <div class="form-group">
+        <label for="Title">Title</label>
+        <input type="text" class="form-control" id="Title" name="Title" value="@Model.Title" />
+        <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label for="Balance">Starting balance</label>
+        <input type="number" class="form-control" id="Balance" name="Balance" value="@Model.Balance" />
+        <span asp-validation-for="Balance" class="text-danger"></span>
+    </div>
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div>
+            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        </div>
+    }
+
+    <button type="submit" class="btn btn-primary">Create Budget</button>
+</form>

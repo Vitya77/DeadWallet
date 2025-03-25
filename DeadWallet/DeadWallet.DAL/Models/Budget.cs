@@ -1,25 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace DeadWallet.DAL.Models
 {
-    public class DeadWalletUser
+    public class Budget
     {
         [Key]
         public int Id { get; set; }
         [Required]
-        public required string FirstName { get; set; }
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal Balance { get; set; }
         [Required]
-        public required string LastName { get; set; }
+        public string Title { get; set; }
         [Required]
-        public required string Username { get; set; }
-        [Required]
-        public required string Password { get; set; }
+        public int OwnerId { get; set; }
+        public DeadWalletUser Owner { get; set; } = null!;
         public ICollection<UserBudget> UserBudgets { get; set; } = new List<UserBudget>();
-        public ICollection<Budget> OwnedBudgets { get; set; } = new List<Budget>();
+
     }
 }
