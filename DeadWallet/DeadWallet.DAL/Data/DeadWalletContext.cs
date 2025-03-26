@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using DeadWallet.DAL.Models;
+﻿using DeadWallet.DAL.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace DeadWallet.DAL
@@ -16,6 +12,7 @@ namespace DeadWallet.DAL
         public DbSet<DeadWalletUser> DeadWalletUsers { get; set; }
         public DbSet<Budget> Budgets { get; set; }
         public DbSet<UserBudget> UserBudgets { get; set; }
+        public DbSet<Transaction> Transactions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -37,6 +34,11 @@ namespace DeadWallet.DAL
                 .WithMany(u => u.OwnedBudgets)
                 .HasForeignKey(b => b.OwnerId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Transaction>()
+                .HasOne(t => t.Budget)
+                .WithMany(b => b.Transactions)
+                .HasForeignKey(t => t.BudgetId);
         }
     }
 }
