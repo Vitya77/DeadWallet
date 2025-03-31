@@ -1,8 +1,11 @@
 ﻿using DeadWallet.BLL.Interfaces;
+using DeadWallet.BLL.Models;
 using DeadWallet.DAL.Interfaces;
 using DeadWallet.DAL.Models;
 using Microsoft.Extensions.Logging;
-
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace DeadWallet.BLL.Services
 {
@@ -22,75 +25,88 @@ namespace DeadWallet.BLL.Services
             _logger = logger;
         }
 
-        public async Task AddTransactionAsync(Transaction transaction)
+        public async Task<Result> AddTransactionAsync(Transaction transaction)
         {
+            if (transaction == null)
+            {
+                return new Result { Success = false, Message = "Transaction cannot be null." };
+            }
+
             _logger.LogInformation($"Adding new transaction. BudgetId: {transaction.BudgetId}, Amount: {transaction.Amount}, IsExpense: {transaction.IsExpense}");
 
             await _transactionRepository.AddAsync(transaction);
 
             var budget = await _budgetRepository.GetByIdAsync(transaction.BudgetId);
-            if (budget != null)
+            if (budget == null)
             {
-                var balanceChange = transaction.IsExpense ? -transaction.Amount : transaction.Amount;
-                budget.Balance += balanceChange;
-                await _budgetRepository.UpdateAsync(budget);
-                _logger.LogInformation($"Updated budget {budget.Id} balance by {balanceChange}. New balance: {budget.Balance}");
+                return new Result { Success = false, Message = $"Budget with ID {transaction.BudgetId} not found." };
             }
-            else
-            {
-                _logger.LogWarning($"Budget with ID {transaction.BudgetId} not found when updating balance");
-            }
+
+            var balanceChange = transaction.IsExpense ? -transaction.Amount : transaction.Amount;
+            budget.Balance += balanceChange;
+            await _budgetRepository.UpdateAsync(budget);
+
+            _logger.LogInformation($"Updated budget {budget.Id} balance by {balanceChange}. New balance: {budget.Balance}");
+            return new Result { Success = true };
         }
 
-        public async Task<Transaction?> GetTransactionByIdAsync(int id)
+        public async Task<Result<Transaction>> GetTransactionByIdAsync(int id)
         {
             _logger.LogDebug($"Getting transaction by ID: {id}");
-            return await _transactionRepository.GetByIdAsync(id);
+            var transaction = await _transactionRepository.GetByIdAsync(id);
+
+            return transaction != null
+                ? new Result<Transaction> { Success = true, Res = transaction }
+                : new Result<Transaction> { Success = false, Message = $"Transaction with ID {id} not found." };
         }
 
-        public async Task<IEnumerable<Transaction>> GetAllTransactionsAsync()
+        public async Task<Result<IEnumerable<Transaction>>> GetAllTransactionsAsync()
         {
             _logger.LogDebug("Getting all transactions");
-            return await _transactionRepository.GetAllAsync();
+            var transactions = await _transactionRepository.GetAllAsync();
+            return new Result<IEnumerable<Transaction>> { Success = true, Res = transactions };
         }
 
-        public async Task UpdateTransactionAsync(Transaction transaction)
+        public async Task<Result> UpdateTransactionAsync(Transaction transaction)
         {
+            if (transaction == null)
+            {
+                return new Result { Success = false, Message = "Transaction cannot be null." };
+            }
+
             _logger.LogInformation($"Updating transaction ID: {transaction.Id}");
             await _transactionRepository.UpdateAsync(transaction);
-            _logger.LogInformation($"Transaction {transaction.Id} updated successfully");
+
+            return new Result { Success = true };
         }
 
-        public async Task DeleteTransactionAsync(int id)
+        public async Task<Result> DeleteTransactionAsync(int id)
         {
             _logger.LogInformation($"Attempting to delete transaction ID: {id}");
 
             var transaction = await _transactionRepository.GetByIdAsync(id);
-            if (transaction != null)
+            if (transaction == null)
             {
-                await _transactionRepository.DeleteAsync(id);
-                _logger.LogInformation($"Transaction {id} deleted successfully");
+                return new Result { Success = false, Message = $"Transaction with ID {id} not found." };
+            }
 
-                var budget = await _budgetRepository.GetByIdAsync(transaction.BudgetId);
-                if (budget != null)
-                {
-                    var balanceChange = transaction.IsExpense ? transaction.Amount : -transaction.Amount;
-                    budget.Balance += balanceChange;
-                    await _budgetRepository.UpdateAsync(budget);
-                    _logger.LogInformation($"Updated budget {budget.Id} balance by {balanceChange}. New balance: {budget.Balance}");
-                }
-                else
-                {
-                    _logger.LogWarning($"Budget with ID {transaction.BudgetId} not found when reverting transaction");
-                }
-            }
-            else
+            await _transactionRepository.DeleteAsync(id);
+            _logger.LogInformation($"Transaction {id} deleted successfully");
+
+            var budget = await _budgetRepository.GetByIdAsync(transaction.BudgetId);
+            if (budget != null)
             {
-                _logger.LogWarning($"Transaction with ID {id} not found for deletion");
+                var balanceChange = transaction.IsExpense ? transaction.Amount : -transaction.Amount;
+                budget.Balance += balanceChange;
+                await _budgetRepository.UpdateAsync(budget);
+
+                _logger.LogInformation($"Updated budget {budget.Id} balance by {balanceChange}. New balance: {budget.Balance}");
             }
+
+            return new Result { Success = true };
         }
 
-        public async Task<IEnumerable<Transaction>> GetTransactionsForBudgetAsync(int budgetId)
+        public async Task<Result<IEnumerable<Transaction>>> GetTransactionsForBudgetAsync(int budgetId)
         {
             _logger.LogDebug($"Getting transactions for budget ID: {budgetId}");
 
@@ -100,8 +116,7 @@ namespace DeadWallet.BLL.Services
                 .OrderByDescending(t => t.Id)
                 .ToList();
 
-            _logger.LogDebug($"Found {filteredTransactions.Count} transactions for budget {budgetId}");
-            return filteredTransactions;
+            return new Result<IEnumerable<Transaction>> { Success = true, Res = filteredTransactions };
         }
     }
 }

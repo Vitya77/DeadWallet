@@ -12,7 +12,7 @@
             <div class="list-group w-100" id="v-tabs-list" role="tablist">
                 @for (int i = 0; i < Model.Count(); i++)
                 {
-                    <a class=@(i == 0 ? "list-group-item list-group-item-action active" : "list-group-item list-group-item-action"))
+                    <a class=@(i == 0 ? "list-group-item list-group-item-action active" : "list-group-item list-group-item-action")
                        id="@($"v-tab{i}")"
                        data-bs-toggle="list"
                        href="@($"#v-tab{i}-content")"
@@ -83,19 +83,30 @@
                             </div>
                         }
 
-                        <!-- Transactions List (Alternative Version) -->
+                        <!-- Transactions List -->
                         <div class="mt-4">
                             <h5>Recent Transactions</h5>
                             <ul class="list-group">
                                 @{
-                                    var transactions = await _transactionService.GetTransactionsForBudgetAsync(budget.Id);
-                                    foreach (var transaction in transactions.OrderByDescending(t => t.Id).Take(5))
+                                    var transactionResult = await _transactionService.GetTransactionsForBudgetAsync(budget.Id);
+
+                                    if (transactionResult.Success)
                                     {
-                                        <li class="list-group-item @(transaction.IsExpense ? "list-group-item-danger" : "list-group-item-success")">
-                                            @(string.IsNullOrEmpty(transaction.Description) ? "No description" : transaction.Description) - @transaction.Amount.ToString("C")
-                                            <span class="badge bg-secondary float-end">
-                                                @(transaction.IsExpense ? "Expense" : "Income")
-                                            </span>
+                                        var transactions = transactionResult.Res.OrderByDescending(t => t.Id).Take(5);
+                                        foreach (var transaction in transactions)
+                                        {
+                                            <li class="list-group-item @(transaction.IsExpense ? "list-group-item-danger" : "list-group-item-success")">
+                                                @(string.IsNullOrEmpty(transaction.Description) ? "No description" : transaction.Description) - @transaction.Amount.ToString("C")
+                                                <span class="badge bg-secondary float-end">
+                                                    @(transaction.IsExpense ? "Expense" : "Income")
+                                                </span>
+                                            </li>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <li class="list-group-item list-group-item-warning">
+                                            Unable to load transactions: @transactionResult.Message
                                         </li>
                                     }
                                 }
