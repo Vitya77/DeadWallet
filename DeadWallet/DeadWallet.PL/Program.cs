@@ -5,7 +5,6 @@ using DeadWallet.DAL;
 using DeadWallet.DAL.Models;
 using Microsoft.AspNetCore.Identity;
 using DeadWallet.BLL.Services;
-
 using DeadWallet.DAL.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -26,13 +25,13 @@ builder.Services.AddDbContext<DeadWalletContext>(options =>
 // Password hasher injection
 builder.Services.AddScoped<IPasswordHasher<DeadWalletUser>, PasswordHasher<DeadWalletUser>>();
 
-// Repositories injection
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IBudgetRepository, BudgetRepository>();
+builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 
-// Services injection
 builder.Services.AddScoped<UserService, UserService>();
 builder.Services.AddScoped<IBudgetService, BudgetService>();
+builder.Services.AddScoped<ITransactionService, TransactionService>();
 
 // JWT auth injection
 builder.Services.AddAuthentication(options =>
@@ -95,15 +94,24 @@ app.Use(async (context, next) =>
     await next();
 });
 
-// Додаємо аутентифікацію перед авторизацією
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapStaticAssets();
 
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
+
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.MapControllerRoute(
+    name: "addTransaction",
+    pattern: "Transaction/AddTransaction",
+    defaults: new { controller = "Transaction", action = "AddTransaction" });
+
+app.MapStaticAssets();
 app.Run();

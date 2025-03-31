@@ -13,6 +13,24 @@ namespace DeadWallet.DAL.Repositories
             _context = context;
         }
 
+        public async Task<Budget?> GetByIdAsync(int id)
+        {
+            return await _context.Budgets.FindAsync(id);
+        }
+
+        public async Task UpdateAsync(Budget budget)
+        {
+            _context.Budgets.Update(budget);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<Budget?> GetBudgetWithTransactionsAsync(int budgetId)
+        {
+            return await _context.Budgets
+                .Include(b => b.Transactions)
+                .FirstOrDefaultAsync(b => b.Id == budgetId);
+        }
+
         public async Task<Budget?> GetBudgetByIdAsync(int budgetId)
         {
             return await _context.Budgets
@@ -43,5 +61,7 @@ namespace DeadWallet.DAL.Repositories
             await _context.Budgets.AddAsync(budget);
             await _context.SaveChangesAsync();
         }
+
+
     }
 }
