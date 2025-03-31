@@ -35,10 +35,16 @@
                          role="tabpanel"
                          aria-labelledby=@($"v-tab{i}")>
 
-                        <h4>@budget.Title</h4>
-                        <p>Current balance: <strong>@budget.Balance.ToString("C")</strong></p>
+                        <div class="d-flex  justify-content-between">
+                            <div>
+                                <h4>@budget.Title</h4>
+                                <p>Current balance: <strong>@budget.Balance.ToString("C")</strong></p>
+                            </div>
+                            <a asp-controller="Transaction" asp-action="BudgetTransactions" asp-route-budgetId="@budget.Id" class="btn btn-outline-primary" style="height: 40px">Transaction History</a>
+                        </div>
 
                         <!-- Transaction Form -->
+
                         <form asp-action="AddTransaction" asp-controller="Transaction" method="post" class="mt-4">
                             <input type="hidden" name="BudgetId" value="@budget.Id" />
 
@@ -66,61 +72,62 @@
 
                             <button type="submit" class="btn btn-primary">Add Transaction</button>
                         </form>
-
+                        
                         <!-- Success Message -->
-                        @if (TempData["SuccessMessage"] != null)
-                        {
-                            <div class="alert alert-success mt-3">
-                                @TempData["SuccessMessage"]
-                            </div>
-                        }
+                         @if (TempData["SuccessMessage"] != null)
+                         {
+                             <div class="alert alert-success mt-3">
+                                 @TempData["SuccessMessage"]
+                             </div>
+                         }
 
-                        <!-- Error Message -->
-                        @if (TempData["ErrorMessage"] != null)
-                        {
-                            <div class="alert alert-danger mt-3">
-                                @TempData["ErrorMessage"]
-                            </div>
-                        }
+                         <!-- Error Message -->
+                         @if (TempData["ErrorMessage"] != null)
+                         {
+                             <div class="alert alert-danger mt-3">
+                                 @TempData["ErrorMessage"]
+                             </div>
+                         }
 
-                        <!-- Transactions List -->
-                        <div class="mt-4">
-                            <h5>Recent Transactions</h5>
-                            <ul class="list-group">
-                                @{
-                                    var transactionResult = await _transactionService.GetTransactionsForBudgetAsync(budget.Id);
+                         <!-- Transactions List -->
+                         <div class="mt-4">
+                             <h5>Recent Transactions</h5>
+                             <ul class="list-group">
+                                 @{
+                                     var transactionResult = await _transactionService.GetTransactionsForBudgetAsync(budget.Id);
 
-                                    if (transactionResult.Success)
-                                    {
-                                        var transactions = transactionResult.Res.OrderByDescending(t => t.Id).Take(5);
-                                        foreach (var transaction in transactions)
-                                        {
-                                            <li class="list-group-item @(transaction.IsExpense ? "list-group-item-danger" : "list-group-item-success")">
-                                                @(string.IsNullOrEmpty(transaction.Description) ? "No description" : transaction.Description) - @transaction.Amount.ToString("C")
-                                                <span class="badge bg-secondary float-end">
-                                                    @(transaction.IsExpense ? "Expense" : "Income")
-                                                </span>
-                                            </li>
-                                        }
-                                    }
-                                    else
-                                    {
-                                        <li class="list-group-item list-group-item-warning">
-                                            Unable to load transactions: @transactionResult.Message
-                                        </li>
-                                    }
-                                }
-                            </ul>
-                        </div>
-                    </div>
-                }
-            </div>
-        </div>
-    </div>
+                                     if (transactionResult.Success)
+                                     {
+                                         var transactions = transactionResult.Res.OrderByDescending(t => t.Id).Take(5);
+                                         foreach (var transaction in transactions)
+                                         {
+                                             <li class="list-group-item @(transaction.IsExpense ? "list-group-item-danger" : "list-group-item-success")">
+                                                 @(string.IsNullOrEmpty(transaction.Description) ? "No description" : transaction.Description) - @transaction.Amount.ToString("C")
+                                                 <span class="badge bg-secondary float-end">
+                                                     @(transaction.IsExpense ? "Expense" : "Income")
+                                                 </span>
+                                             </li>
+                                         }
+                                     }
+                                     else
+                                     {
+                                         <li class="list-group-item list-group-item-warning">
+                                             Unable to load transactions: @transactionResult.Message
+                                         </li>
+                                     }
+                                 }
+                             </ul>
+                         </div>
+                     </div>
+                 }
+             </div>
+         </div>
+     </div>
 </div>
 
 <style>
-    .budgets-container {
-        height: 75vh;
-    }
+     .budgets-container {
+         height: 75vh;
+     }
 </style>
+

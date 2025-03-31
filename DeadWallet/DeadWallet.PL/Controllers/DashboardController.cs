@@ -103,5 +103,7 @@ namespace DeadWallet.PL.Controllers
             _logger.LogInformation("Submitted data is invalid");
             return View(model);
         }
+        
+        
     }
 }

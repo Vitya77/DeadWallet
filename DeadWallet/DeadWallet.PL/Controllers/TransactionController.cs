@@ -64,5 +64,27 @@ namespace DeadWallet.PL.Controllers
 
             return RedirectToAction("Index", "Home");
         }
+        
+        
+        public async Task<IActionResult> BudgetTransactions(int budgetId)
+        {
+            var allTransactionsResult = await _transactionService.GetAllTransactionsAsync();
+            if (!allTransactionsResult.Success)
+            {
+                _logger.LogError($"Failed to get transactions: {allTransactionsResult.Message}");
+                return NotFound();
+            }
+
+            var transactions = allTransactionsResult.Res
+                .Where(t => t.BudgetId == budgetId)
+                .OrderByDescending(t => t.CreatedAt)
+                .ToList();
+
+            // Отримання назви бюджету з першої транзакції (якщо є)
+            string budgetName = transactions.FirstOrDefault()?.Budget?.Title ?? "unknown budjet";
+            ViewBag.BudgetName = budgetName;
+
+            return View(transactions);
+        }
     }
 }
