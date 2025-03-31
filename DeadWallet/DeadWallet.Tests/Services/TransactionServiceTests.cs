@@ -1,4 +1,5 @@
 ﻿using DeadWallet.BLL.Interfaces;
+using DeadWallet.BLL.Models;
 using DeadWallet.BLL.Services;
 using DeadWallet.DAL.Interfaces;
 using DeadWallet.DAL.Models;
@@ -7,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging; 
 using Xunit;
 
 namespace DeadWallet.BLL.Tests.Services
@@ -15,15 +17,18 @@ namespace DeadWallet.BLL.Tests.Services
     {
         private readonly Mock<ITransactionRepository> _transactionRepoMock;
         private readonly Mock<IBudgetRepository> _budgetRepoMock;
+        private readonly Mock<ILogger<TransactionService>> _loggerMock;
         private readonly TransactionService _transactionService;
 
         public TransactionServiceTests()
         {
             _transactionRepoMock = new Mock<ITransactionRepository>();
             _budgetRepoMock = new Mock<IBudgetRepository>();
+            _loggerMock = new Mock<ILogger<TransactionService>>();
             _transactionService = new TransactionService(
                 _transactionRepoMock.Object,
-                _budgetRepoMock.Object);
+                _budgetRepoMock.Object,
+                _loggerMock.Object);
         }
 
         [Fact]
@@ -43,9 +48,10 @@ namespace DeadWallet.BLL.Tests.Services
                 .ReturnsAsync(budget);
 
             // Act
-            await _transactionService.AddTransactionAsync(transaction);
+            var result = await _transactionService.AddTransactionAsync(transaction);
 
             // Assert
+            Assert.True(result.Success);
             _transactionRepoMock.Verify(x => x.AddAsync(transaction), Times.Once);
             _budgetRepoMock.Verify(x => x.UpdateAsync(It.Is<Budget>(b => b.Balance == 400)), Times.Once);
         }
@@ -67,9 +73,10 @@ namespace DeadWallet.BLL.Tests.Services
                 .ReturnsAsync(budget);
 
             // Act
-            await _transactionService.AddTransactionAsync(transaction);
+            var result = await _transactionService.AddTransactionAsync(transaction);
 
             // Assert
+            Assert.True(result.Success);
             _transactionRepoMock.Verify(x => x.AddAsync(transaction), Times.Once);
             _budgetRepoMock.Verify(x => x.UpdateAsync(It.Is<Budget>(b => b.Balance == 600)), Times.Once);
         }
@@ -84,12 +91,15 @@ namespace DeadWallet.BLL.Tests.Services
                 .ReturnsAsync((Budget)null);
 
             // Act
-            await _transactionService.AddTransactionAsync(transaction);
+            var result = await _transactionService.AddTransactionAsync(transaction);
 
             // Assert
+            Assert.False(result.Success);
+            Assert.Equal("Budget with ID 1 not found.", result.Message);  // Перевірка на відповідне повідомлення
             _transactionRepoMock.Verify(x => x.AddAsync(transaction), Times.Once);
             _budgetRepoMock.Verify(x => x.UpdateAsync(It.IsAny<Budget>()), Times.Never);
         }
+
 
         [Fact]
         public async Task GetTransactionByIdAsync_ShouldReturnTransaction()
@@ -103,7 +113,8 @@ namespace DeadWallet.BLL.Tests.Services
             var result = await _transactionService.GetTransactionByIdAsync(1);
 
             // Assert
-            Assert.Equal(expectedTransaction, result);
+            Assert.True(result.Success);
+            Assert.Equal(expectedTransaction, result.Res);
         }
 
         [Fact]
@@ -122,7 +133,8 @@ namespace DeadWallet.BLL.Tests.Services
             var result = await _transactionService.GetAllTransactionsAsync();
 
             // Assert
-            Assert.Equal(2, result.Count());
+            Assert.True(result.Success);
+            Assert.Equal(2, result.Res.Count());
         }
 
         [Fact]
@@ -132,9 +144,10 @@ namespace DeadWallet.BLL.Tests.Services
             var transaction = new Transaction { Id = 1 };
 
             // Act
-            await _transactionService.UpdateTransactionAsync(transaction);
+            var result = await _transactionService.UpdateTransactionAsync(transaction);
 
             // Assert
+            Assert.True(result.Success);
             _transactionRepoMock.Verify(x => x.UpdateAsync(transaction), Times.Once);
         }
 
@@ -157,9 +170,10 @@ namespace DeadWallet.BLL.Tests.Services
                 .ReturnsAsync(budget);
 
             // Act
-            await _transactionService.DeleteTransactionAsync(1);
+            var result = await _transactionService.DeleteTransactionAsync(1);
 
             // Assert
+            Assert.True(result.Success);
             _transactionRepoMock.Verify(x => x.DeleteAsync(1), Times.Once);
             _budgetRepoMock.Verify(x => x.UpdateAsync(It.Is<Budget>(b => b.Balance == 500)), Times.Once);
         }
@@ -172,9 +186,11 @@ namespace DeadWallet.BLL.Tests.Services
                 .ReturnsAsync((Transaction)null);
 
             // Act
-            await _transactionService.DeleteTransactionAsync(1);
+            var result = await _transactionService.DeleteTransactionAsync(1);
 
             // Assert
+            Assert.False(result.Success);
+            Assert.Equal("Transaction with ID 1 not found.", result.Message);
             _transactionRepoMock.Verify(x => x.DeleteAsync(It.IsAny<int>()), Times.Never);
             _budgetRepoMock.Verify(x => x.UpdateAsync(It.IsAny<Budget>()), Times.Never);
         }
@@ -196,9 +212,10 @@ namespace DeadWallet.BLL.Tests.Services
             var result = await _transactionService.GetTransactionsForBudgetAsync(1);
 
             // Assert
-            Assert.Equal(2, result.Count());
-            Assert.All(result, t => Assert.Equal(1, t.BudgetId));
-            Assert.Equal(3, result.First().Id); // Verify ordering
+            Assert.True(result.Success);
+            Assert.Equal(2, result.Res.Count());
+            Assert.All(result.Res, t => Assert.Equal(1, t.BudgetId));
+            Assert.Equal(3, result.Res.First().Id);
         }
     }
 }

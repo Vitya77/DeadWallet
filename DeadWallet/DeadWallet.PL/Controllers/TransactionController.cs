@@ -2,10 +2,6 @@
 using DeadWallet.DAL.Models;
 using DeadWallet.PL.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace DeadWallet.PL.Controllers
 {
@@ -54,16 +50,16 @@ namespace DeadWallet.PL.Controllers
                 BudgetId = model.BudgetId
             };
 
-            try
+            var result = await _transactionService.AddTransactionAsync(transaction);
+
+            if (result.Success)
             {
-                await _transactionService.AddTransactionAsync(transaction);
                 _logger.LogInformation($"Transaction added successfully. Type: {(model.IsExpense ? "Expense" : "Income")}, Amount: {model.Amount:C}");
-                TempData["SuccessMessage"] = $"Transaction added successfully! {(model.IsExpense ? "Expense" : "Income")}: {model.Amount:C}";
             }
-            catch (Exception ex)
+            else
             {
-                _logger.LogError(ex, "Failed to add transaction");
-                TempData["ErrorMessage"] = "Failed to add transaction. Please try again.";
+                _logger.LogError($"Failed to add transaction: {result.Message}");
+                TempData["ErrorMessage"] = result.Message;
             }
 
             return RedirectToAction("Index", "Home");
