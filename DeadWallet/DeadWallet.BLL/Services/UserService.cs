@@ -44,11 +44,10 @@ namespace DeadWallet.BLL.Services
                 Username = model.Username,
                 FirstName = model.FirstName,
                 LastName = model.LastName,
-                Password = model.Password
+                Password = model.Password,
             };
 
             user.Password = _passwordHasher.HashPassword(user, model.Password);
-
             await _userRepository.CreateUserAsync(user);
 
             // Generate JWT token
@@ -60,7 +59,8 @@ namespace DeadWallet.BLL.Services
             var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(ClaimTypes.Role, user.Role)
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"] ?? throw new InvalidOperationException("Connection string 'DeadWallerContext' not found.")));

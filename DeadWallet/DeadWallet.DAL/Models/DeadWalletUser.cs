@@ -21,5 +21,6 @@ namespace DeadWallet.DAL.Models
         public required string Password { get; set; }
         public ICollection<UserBudget> UserBudgets { get; set; } = new List<UserBudget>();
         public ICollection<Budget> OwnedBudgets { get; set; } = new List<Budget>();
+        public string Role { get; set; } = "User";
     }
 }

@@ -4,6 +4,7 @@ using DeadWallet.DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DeadWallet.DAL.Migrations
 {
     [DbContext(typeof(DeadWalletContext))]
-    partial class DeadWalletContextModelSnapshot : ModelSnapshot
+    [Migration("20250331133503_AddRoleToUser")]
+    partial class AddRoleToUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -78,17 +81,6 @@ namespace DeadWallet.DAL.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("DeadWalletUsers");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            FirstName = "Admin",
-                            LastName = "Admin",
-                            Password = "AQAAAAIAAYagAAAAEGFNYh / EgkDsjALf1Ct6Yv2XG + UrxClo3CNe6IGwRgGZHsgSzxuaPreGUJ7BNZ07yQ ==",
-                            Role = "Admin",
-                            Username = "Admin"
-                        });
                 });
 
             modelBuilder.Entity("DeadWallet.DAL.Models.Transaction", b =>
