@@ -16,6 +16,18 @@ namespace DeadWallet.DAL
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            var adminUser = new DeadWalletUser
+            {
+                Id = 1,
+                Username = "Admin",
+                FirstName = "Admin",
+                LastName = "Admin",
+                Password = "AQAAAAIAAYagAAAAEGFNYh / EgkDsjALf1Ct6Yv2XG + UrxClo3CNe6IGwRgGZHsgSzxuaPreGUJ7BNZ07yQ ==", // Placeholder, will be updated in the service layer
+                Role = "Admin"
+            };
+
+            modelBuilder.Entity<DeadWalletUser>().HasData(adminUser);
+    
             modelBuilder.Entity<UserBudget>()
                 .HasKey(ub => new { ub.UserId, ub.BudgetId });
 
