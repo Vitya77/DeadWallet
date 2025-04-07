@@ -6,6 +6,12 @@
 <section>
     <form class="d-flex flex-column gap-3" style="width: 400px" asp-action="Register" method="post">
         <div class="form-group">
+            <label for="Email">Email</label>
+            <input type="text" class="form-control" id="Email" name="Email" value="@Model.Email" />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
             <label for="Username">Username</label>
             <input type="text" class="form-control" id="Username" name="Username" value="@Model.Username" />
             <span asp-validation-for="Username" class="text-danger"></span>

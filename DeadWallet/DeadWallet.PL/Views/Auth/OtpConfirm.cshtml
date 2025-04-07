@@ -1,0 +1,29 @@
+﻿@model OtpViewModel
+@{
+    ViewData["Title"] = "Otp confirmation";
+}
+
+<section class="w-100 h-100 d-flex justify-content-center align-items-center">
+    <form style="width: 400px;" class="d-flex flex-column gap-3 border-1 border-black" asp-action="OtpConfirm" method="post">
+        <div class="form-group">
+            <label for="Otp">Otp code</label>
+            <input type="text" class="form-control" id="Otp" name="Otp" value="@Model.Otp" />
+            <span asp-validation-for="Otp" class="text-danger"></span>
+        </div>
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div>
+                @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+            </div>
+        }
+
+        <button type="submit" class="mt-1 btn btn-primary">Confirm</button>
+    </form>
+</section>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -13,6 +13,7 @@ using DeadWallet.DAL.Models;
 using DeadWallet.DAL.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Http;
+using DeadWallet.BLL.Interfaces;
 
 namespace DeadWallet.BLL.Services
 {
@@ -21,18 +22,27 @@ namespace DeadWallet.BLL.Services
         private readonly IUserRepository _userRepository;
         private readonly IPasswordHasher<DeadWalletUser> _passwordHasher;
         private readonly IConfiguration _configuration;
+        private readonly IEmailOtpRepository _otpRepository;
+        private readonly IEmailService _emailService;
 
-        public UserService(IUserRepository userRepository, IPasswordHasher<DeadWalletUser> passwordHasher, IConfiguration configuration)
+        public UserService(
+            IUserRepository userRepository, 
+            IPasswordHasher<DeadWalletUser> passwordHasher, 
+            IConfiguration configuration,
+            IEmailOtpRepository otpRepository,
+            IEmailService emailService)
         {
             _userRepository = userRepository;
             _passwordHasher = passwordHasher;
             _configuration = configuration;
+            _otpRepository = otpRepository;
+            _emailService = emailService;
         }
 
-        public async Task<string> RegisterAsync(RegistrationModel model)
+        public async Task<Result> RegisterAsync(RegistrationModel model)
         {
             // Check if the user already exists
-            var existingUser = await _userRepository.FindUserByUsernameAsync(model.Username);
+            var existingUser = await _userRepository.FindUserByEmailAsync(model.Email);
             if (existingUser != null)
             {
                 throw new Exception("User already exists");
@@ -45,13 +55,25 @@ namespace DeadWallet.BLL.Services
                 FirstName = model.FirstName,
                 LastName = model.LastName,
                 Password = model.Password,
+                Email = model.Email
             };
 
             user.Password = _passwordHasher.HashPassword(user, model.Password);
             await _userRepository.CreateUserAsync(user);
 
-            // Generate JWT token
-            return GenerateJwtToken(user);
+            var otpCode = new Random().Next(100000, 999999).ToString();
+
+            var otp = new EmailOtp
+            {
+                Email = user.Email,
+                Code = otpCode,
+                Expiration = DateTime.UtcNow.AddMinutes(5)
+            };
+
+            await _otpRepository.SaveOtpAsync(otp);
+            await _emailService.SendOtpAsync(user.Email, otpCode);
+
+            return new Result { Success = true };
         }
 
         private string GenerateJwtToken(DeadWalletUser user)
@@ -95,7 +117,7 @@ namespace DeadWallet.BLL.Services
         public async Task<string> LoginAsync(LoginModel model)
         {
             // Find the user by username
-            var user = await _userRepository.FindUserByUsernameAsync(model.Username);
+            var user = await _userRepository.FindUserByEmailAsync(model.Email);
             if (user == null)
             {
                 throw new Exception("Invalid username or password");
@@ -110,6 +132,21 @@ namespace DeadWallet.BLL.Services
 
             // Generate JWT token
             return GenerateJwtToken(user);
+        }
+
+        public async Task<Result> VerifyOtpAsync(string email, string otpCode)
+        {
+            var otp = await _otpRepository.GetOtpByEmailAsync(email);
+            if (otp == null || otp.Expiration < DateTime.UtcNow || otp.Code != otpCode)
+                return new Result { Success = false, Message = "Invalid or expired OTP" };
+
+            var user = await _userRepository.FindUserByEmailAsync(email);
+            if (user == null)
+                return new Result { Success = false, Message = "User not found" };
+
+            await _otpRepository.DeleteOtpAsync(email);
+
+            return new Result { Success = true, Message = GenerateJwtToken(user) };
         }
     }
 }

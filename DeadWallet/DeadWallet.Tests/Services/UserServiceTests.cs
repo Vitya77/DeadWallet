@@ -2,6 +2,7 @@
 using DeadWallet.BLL.Services;
 using DeadWallet.DAL.Models;
 using DeadWallet.DAL.Interfaces;
+using DeadWallet.BLL.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Identity;
 using Moq;
@@ -14,6 +15,8 @@ public class UserServiceTests
     private readonly Mock<IUserRepository> _mockUserRepository;
     private readonly Mock<IPasswordHasher<DeadWalletUser>> _mockPasswordHasher;
     private readonly Mock<IConfiguration> _mockConfiguration;
+    private readonly Mock<IEmailOtpRepository> _mockOtpRepository;
+    private readonly Mock<IEmailService> _mockEmailService;
     private readonly UserService _userService;
 
     public UserServiceTests()
@@ -21,11 +24,15 @@ public class UserServiceTests
         _mockUserRepository = new Mock<IUserRepository>();
         _mockPasswordHasher = new Mock<IPasswordHasher<DeadWalletUser>>();
         _mockConfiguration = new Mock<IConfiguration>();
+        _mockOtpRepository = new Mock<IEmailOtpRepository>();
+        _mockEmailService = new Mock<IEmailService>();
 
         _userService = new UserService(
             _mockUserRepository.Object,
             _mockPasswordHasher.Object,
-            _mockConfiguration.Object
+            _mockConfiguration.Object,
+            _mockOtpRepository.Object,
+            _mockEmailService.Object
         );
     }
 
@@ -35,6 +42,7 @@ public class UserServiceTests
         // Arrange
         var registrationModel = new RegistrationModel
         {
+            Email = "someemail@gmail.com",
             Username = "existingUser",
             FirstName = "John",
             LastName = "Doe",
@@ -42,9 +50,10 @@ public class UserServiceTests
         };
 
         _mockUserRepository
-            .Setup(repo => repo.FindUserByUsernameAsync(registrationModel.Username))
+            .Setup(repo => repo.FindUserByEmailAsync(registrationModel.Email))
             .ReturnsAsync(new DeadWalletUser
             {
+                Email = "someemail@gmail.com",
                 Username = "existingUser",
                 FirstName = "John",
                 LastName = "Doe",
@@ -56,10 +65,13 @@ public class UserServiceTests
     }
 
     [Fact]
-    public async Task RegisterAsync_NewUser_ReturnsJwtToken()
+    public async Task RegisterAsync_NewUser_ReturnsSuccessResult()
     {
+        
+
         var registrationModel = new RegistrationModel
         {
+            Email = "someemail@gmail.com",
             Username = "newUser",
             FirstName = "Jane",
             LastName = "Doe",
@@ -67,7 +79,7 @@ public class UserServiceTests
         };
 
         _mockUserRepository
-            .Setup(repo => repo.FindUserByUsernameAsync(registrationModel.Username))
+            .Setup(repo => repo.FindUserByEmailAsync(registrationModel.Email))
             .ReturnsAsync((DeadWalletUser)null);
 
         _mockUserRepository
@@ -96,8 +108,8 @@ public class UserServiceTests
 
         var result = await _userService.RegisterAsync(registrationModel);
 
+        Assert.True(result.Success);
         Assert.NotNull(result);
-        Assert.NotEmpty(result);
     }
 
     [Fact]
@@ -115,7 +127,9 @@ public class UserServiceTests
         var userService = new UserService(
             _mockUserRepository.Object,
             _mockPasswordHasher.Object,
-            _mockConfiguration.Object
+            _mockConfiguration.Object,
+            _mockOtpRepository.Object,
+            _mockEmailService.Object
         );
 
         userService.Logout(mockHttpContextAccessor.Object);
@@ -126,18 +140,16 @@ public class UserServiceTests
     [Fact]
     public async Task LoginAsync_UserDoesNotExist_ThrowsException()
     {
-        // Arrange
         var loginModel = new LoginModel
         {
-            Username = "nonExistingUser",
+            Email = "nonExistingUser@gmail.com",
             Password = "password123"
         };
     
         _mockUserRepository
-            .Setup(repo => repo.FindUserByUsernameAsync(loginModel.Username))
+            .Setup(repo => repo.FindUserByEmailAsync(loginModel.Email))
             .ReturnsAsync((DeadWalletUser)null);
     
-        // Act & Assert
         await Assert.ThrowsAsync<Exception>(() => _userService.LoginAsync(loginModel));
     }
     
@@ -147,13 +159,13 @@ public class UserServiceTests
         // Arrange
         var loginModel = new LoginModel
         {
-            
-            Username = "existingUser",
+            Email = "existingUser@gmail.com",
             Password = "wrongPassword"
         };
 
         var user = new DeadWalletUser
         {
+            Email = "existingUser@gmail.com",
             FirstName = "Jane",
             LastName = "Doe",
             Username = "existingUser",
@@ -161,7 +173,7 @@ public class UserServiceTests
         };
 
         _mockUserRepository
-            .Setup(repo => repo.FindUserByUsernameAsync(loginModel.Username))
+            .Setup(repo => repo.FindUserByEmailAsync(loginModel.Email))
             .ReturnsAsync(user);
 
         _mockPasswordHasher
@@ -178,12 +190,13 @@ public class UserServiceTests
         // Arrange
         var loginModel = new LoginModel
         {
-            Username = "existingUser",
+            Email = "existingUser@gmail.com",
             Password = "correctPassword"
         };
 
         var user = new DeadWalletUser
-        {   
+        {
+            Email = "existingUser@gmail.com",
             FirstName = "Jane",
             LastName = "Doe",
             Username = "existingUser",
@@ -191,7 +204,7 @@ public class UserServiceTests
         };
 
         _mockUserRepository
-            .Setup(repo => repo.FindUserByUsernameAsync(loginModel.Username))
+            .Setup(repo => repo.FindUserByEmailAsync(loginModel.Email))
             .ReturnsAsync(user);
 
         _mockPasswordHasher
@@ -221,5 +234,51 @@ public class UserServiceTests
         Assert.NotNull(result);
         Assert.NotEmpty(result);
     }
-    
+
+    [Fact]
+    public async Task VerifyOtpAsync_ValidOtp_ReturnsSuccessAndToken()
+    {
+        var email = "user@example.com";
+        var otpCode = "123456";
+
+        var otp = new EmailOtp
+        {
+            Email = email,
+            Code = otpCode,
+            Expiration = DateTime.UtcNow.AddMinutes(5)
+        };
+
+        var user = new DeadWalletUser
+        {
+            Email = email,
+            FirstName = "John",
+            LastName = "Doe",
+            Username = "johndoe",
+            Password = "hashedPassword"
+        };
+
+        _mockOtpRepository
+            .Setup(repo => repo.GetOtpByEmailAsync(email))
+            .ReturnsAsync(otp);
+
+        _mockUserRepository
+            .Setup(repo => repo.FindUserByEmailAsync(email))
+            .ReturnsAsync(user);
+
+        _mockOtpRepository
+            .Setup(repo => repo.DeleteOtpAsync(email))
+            .Returns(Task.CompletedTask);
+
+        _mockConfiguration.Setup(c => c["Jwt:SecretKey"]).Returns("your-secret-key-with-at-least-32-chars");
+        _mockConfiguration.Setup(c => c["Jwt:ExpirationTimeDays"]).Returns("7");
+        _mockConfiguration.Setup(c => c["Jwt:Issuer"]).Returns("TestIssuer");
+        _mockConfiguration.Setup(c => c["Jwt:Audience"]).Returns("TestAudience");
+
+        var result = await _userService.VerifyOtpAsync(email, otpCode);
+
+        Assert.True(result.Success);
+        Assert.NotNull(result.Message);
+        Assert.IsType<string>(result.Message);
+    }
+
 }

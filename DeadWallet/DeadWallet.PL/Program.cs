@@ -28,10 +28,12 @@ builder.Services.AddScoped<IPasswordHasher<DeadWalletUser>, PasswordHasher<DeadW
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IBudgetRepository, BudgetRepository>();
 builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
+builder.Services.AddScoped<IEmailOtpRepository, EmailOtpRepository>();
 
 builder.Services.AddScoped<UserService, UserService>();
 builder.Services.AddScoped<IBudgetService, BudgetService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 // JWT auth injection
 builder.Services.AddAuthentication(options =>
