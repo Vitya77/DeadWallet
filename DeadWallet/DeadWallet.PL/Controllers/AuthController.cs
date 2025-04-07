@@ -91,7 +91,7 @@ namespace DeadWallet.PL.Controllers
         [HttpPost]
         public async Task<IActionResult> OtpConfirm(OtpViewModel model)
         {
-            _logger.LogInformation("User submited otp form");
+            _logger.LogInformation("User submitted otp form");
             try
             {
                 if (ModelState.IsValid)
