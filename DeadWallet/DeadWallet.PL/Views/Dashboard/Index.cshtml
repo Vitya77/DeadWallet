@@ -1,18 +1,20 @@
 ﻿@model IEnumerable<DeadWallet.DAL.Models.Budget>
 @inject DeadWallet.BLL.Interfaces.ITransactionService _transactionService
+@inject DeadWallet.BLL.Interfaces.ITagService _tagService
+@using DeadWallet.DAL.Models
 
 @{
     ViewData["Title"] = "Dashboard";
+    var tags = await _tagService.GetAllTagsAsync();
 }
 
 <div class="container mt-5 budgets-container">
     <div class="row h-100">
-        <!-- Vertical Tabs -->
         <div class="col-md-3 d-flex flex-column justify-content-between align-items-center h-100">
             <div class="list-group w-100" id="v-tabs-list" role="tablist">
                 @for (int i = 0; i < Model.Count(); i++)
                 {
-                    <a class=@(i == 0 ? "list-group-item list-group-item-action active" : "list-group-item list-group-item-action")
+                    <a class="list-group-item list-group-item-action @(i == 0 ? "active" : "")"
                        id="@($"v-tab{i}")"
                        data-bs-toggle="list"
                        href="@($"#v-tab{i}-content")"
@@ -21,29 +23,22 @@
                     </a>
                 }
             </div>
-            <a asp-action="CreateBudget" class="btn btn-primary">Create budget</a>
+            <a asp-action="CreateBudget" class="btn btn-primary mt-3">Create budget</a>
         </div>
 
-        <!-- Tab Content -->
         <div class="col-md-9">
             <div class="tab-content" id="v-tabs-content">
                 @for (int i = 0; i < Model.Count(); i++)
                 {
                     var budget = Model.ToList()[i];
-                    <div class=@(i == 0 ? "tab-pane fade show active" : "tab-pane fade")
-                         id=@($"v-tab{i}-content")
-                         role="tabpanel"
-                         aria-labelledby=@($"v-tab{i}")>
-
-                        <div class="d-flex  justify-content-between">
+                    <div class="tab-pane fade @(i == 0 ? "show active" : "")" id="@($"v-tab{i}-content")" role="tabpanel">
+                        <div class="d-flex justify-content-between">
                             <div>
                                 <h4>@budget.Title</h4>
                                 <p>Current balance: <strong>@budget.Balance.ToString("C")</strong></p>
                             </div>
-                            <a asp-controller="Transaction" asp-action="BudgetTransactions" asp-route-budgetId="@budget.Id" class="btn btn-outline-primary" style="height: 40px">Transaction History</a>
+                            <a asp-controller="Transaction" asp-action="BudgetTransactions" asp-route-budgetId="@budget.Id" class="btn btn-outline-primary">Transaction History</a>
                         </div>
-
-                        <!-- Transaction Form -->
 
                         <form asp-action="AddTransaction" asp-controller="Transaction" method="post" class="mt-4">
                             <input type="hidden" name="BudgetId" value="@budget.Id" />
@@ -64,6 +59,22 @@
                                 <input type="text" class="form-control" name="Description" />
                             </div>
 
+                            <div class="form-group mb-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <label>Tag</label>
+                                    <a asp-controller="Tag" asp-action="Index" class="btn btn-sm btn-outline-secondary">Manage Tags</a>
+                                </div>
+                                <select class="form-control" name="TagId" id="tagSelect-@budget.Id">
+                                    <option value="">No Tag</option>
+                                    @foreach (var tag in tags)
+                                    {
+                                        <option value="@tag.Id" data-color="@tag.Color" style="background-color:@tag.Color; color: white;">
+                                            @tag.Name
+                                        </option>
+                                    }
+                                </select>
+                            </div>
+
                             <div class="form-check mb-3">
                                 <input class="form-check-input" type="checkbox" name="IsExpense" id="isExpense" value="true" />
                                 <input type="hidden" name="IsExpense" value="false" />
@@ -72,62 +83,123 @@
 
                             <button type="submit" class="btn btn-primary">Add Transaction</button>
                         </form>
-                        
+
                         <!-- Success Message -->
-                         @if (TempData["SuccessMessage"] != null)
-                         {
-                             <div class="alert alert-success mt-3">
-                                 @TempData["SuccessMessage"]
-                             </div>
-                         }
+                        @if (TempData["SuccessMessage"] != null)
+                        {
+                            <div class="alert alert-success mt-3">
+                                @TempData["SuccessMessage"]
+                            </div>
+                        }
 
-                         <!-- Error Message -->
-                         @if (TempData["ErrorMessage"] != null)
-                         {
-                             <div class="alert alert-danger mt-3">
-                                 @TempData["ErrorMessage"]
-                             </div>
-                         }
+                        <!-- Error Message -->
+                        @if (TempData["ErrorMessage"] != null)
+                        {
+                            <div class="alert alert-danger mt-3">
+                                @TempData["ErrorMessage"]
+                            </div>
+                        }
 
-                         <!-- Transactions List -->
-                         <div class="mt-4">
-                             <h5>Recent Transactions</h5>
-                             <ul class="list-group">
-                                 @{
-                                     var transactionResult = await _transactionService.GetTransactionsForBudgetAsync(budget.Id);
+                        <!-- Transactions List -->
+                        <div class="mt-4">
+                            <h5>Recent Transactions</h5>
+                            <ul class="list-group">
+                                @{
+                                    var transactionResult = await _transactionService.GetTransactionsForBudgetAsync(budget.Id);
 
-                                     if (transactionResult.Success)
-                                     {
-                                         var transactions = transactionResult.Res.OrderByDescending(t => t.Id).Take(5);
-                                         foreach (var transaction in transactions)
-                                         {
-                                             <li class="list-group-item @(transaction.IsExpense ? "list-group-item-danger" : "list-group-item-success")">
-                                                 @(string.IsNullOrEmpty(transaction.Description) ? "No description" : transaction.Description) - @transaction.Amount.ToString("C")
-                                                 <span class="badge bg-secondary float-end">
-                                                     @(transaction.IsExpense ? "Expense" : "Income")
-                                                 </span>
-                                             </li>
-                                         }
-                                     }
-                                     else
-                                     {
-                                         <li class="list-group-item list-group-item-warning">
-                                             Unable to load transactions: @transactionResult.Message
-                                         </li>
-                                     }
-                                 }
-                             </ul>
-                         </div>
-                     </div>
-                 }
-             </div>
-         </div>
-     </div>
+                                    if (transactionResult.Success)
+                                    {
+                                        var transactions = transactionResult.Res
+                                        .OrderByDescending(t => t.Id)
+                                        .Take(5)
+                                        .Select(t => new
+                                        {
+                                            Transaction = t,
+                                            Tag = tags.FirstOrDefault(tag => tag.Id == t.TagId)
+                                        });
+
+                                        foreach (var item in transactions)
+                                        {
+                                            var transaction = item.Transaction;
+                                            var tag = item.Tag;
+
+                                            <li class="list-group-item @(transaction.IsExpense ? "list-group-item-danger" : "list-group-item-success")">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div class="d-flex flex-column">
+                                                        <div>
+                                                            @(string.IsNullOrEmpty(transaction.Description) ? "No description" : transaction.Description) -
+                                                            <strong>@transaction.Amount.ToString("C")</strong>
+                                                        </div>
+                                                        @if (tag != null)
+                                                        {
+                                                            <div class="mt-1">
+                                                                <span class="badge rounded-pill d-inline-flex align-items-center"
+                                                                      style="background-color:@tag.Color; color:white; padding: 0.25em 0.6em; font-size:0.8em;">
+                                                                    <i class="bi bi-tag-fill me-1" style="font-size:0.7em;"></i>
+                                                                    @tag.Name
+                                                                </span>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                    <div>
+                                                        <span class="badge @(transaction.IsExpense ? "bg-danger" : "bg-success")">
+                                                            @(transaction.IsExpense ? "Expense" : "Income")
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <li class="list-group-item list-group-item-warning">
+                                            <i class="bi bi-exclamation-triangle me-2"></i>
+                                            Unable to load transactions: @transactionResult.Message
+                                        </li>
+                                    }
+                                }
+                            </ul>
+                        </div>
+
+                        <script>
+                            document.getElementById('tagSelect-@budget.Id').addEventListener('change', function() {
+                                let selectedOption = this.options[this.selectedIndex];
+                                this.style.backgroundColor = selectedOption.getAttribute('data-color');
+                                this.style.color = 'white';
+                            });
+                        </script>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
 </div>
 
 <style>
-     .budgets-container {
-         height: 75vh;
-     }
-</style>
+    .budgets-container {
+        height: 75vh;
+    }
 
+    select.form-control option {
+        padding: 8px;
+        margin: 4px 0;
+    }
+
+    .list-group-item .badge {
+        font-size: 0.8em;
+    }
+
+    .gap-2 {
+        gap: 0.5rem;
+    }
+
+    .list-group-item {
+        padding: 1rem;
+    }
+
+    .form-control-color {
+        height: 38px;
+        width: 50px;
+        cursor: pointer;
+    }
+</style>

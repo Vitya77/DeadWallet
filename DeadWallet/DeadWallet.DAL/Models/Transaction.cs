@@ -26,5 +26,10 @@ namespace DeadWallet.DAL.Models
         public Budget Budget { get; set; } = null!;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public int? TagId { get; set; }
+
+        [ForeignKey("TagId")]
+        public Tag? Tag { get; set; }
     }
 }

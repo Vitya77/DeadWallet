@@ -13,6 +13,7 @@ namespace DeadWallet.DAL
         public DbSet<Budget> Budgets { get; set; }
         public DbSet<UserBudget> UserBudgets { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
+        public DbSet<Tag> Tags { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
