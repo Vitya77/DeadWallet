@@ -77,7 +77,7 @@ namespace DeadWallet.PL.Controllers
 
                     ModelState.AddModelError("", "Registration failed.");
                 }
-                _logger.LogWarning("Submited data was invalid");
+                _logger.LogWarning("Submitted data was invalid");
                 return View(model);
             }
             catch (Exception ex)
