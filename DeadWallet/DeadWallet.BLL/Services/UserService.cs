@@ -61,8 +61,7 @@ namespace DeadWallet.BLL.Services
             user.Password = _passwordHasher.HashPassword(user, model.Password);
             await _userRepository.CreateUserAsync(user);
 
-            var otpCode = new Random().Next(100000, 999999).ToString();
-
+            var otpCode = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
             var otp = new EmailOtp
             {
                 Email = user.Email,
