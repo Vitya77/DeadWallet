@@ -115,14 +115,15 @@ app.MapControllerRoute(
     defaults: new { controller = "Transaction", action = "AddTransaction" });
 
 app.MapControllerRoute(
+    name: "editTag",
+    pattern: "Tag/Edit/{id}",
+    defaults: new { controller = "Tag", action = "Edit" });
+
+app.MapControllerRoute(
     name: "tags",
     pattern: "Tag/{action=Manage}",
     defaults: new { controller = "Tag" });
 
-app.MapControllerRoute(
-    name: "editTag",
-    pattern: "Tag/Edit/{id}",
-    defaults: new { controller = "Tag", action = "Edit" });
 
 
 app.MapStaticAssets();

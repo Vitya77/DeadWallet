@@ -1,26 +1,48 @@
-@model DeadWallet.DAL.Models.Tag
+﻿@model DeadWallet.DAL.Models.Tag
 
 @{
     ViewData["Title"] = "Edit Tag";
 }
 
 <div class="container mt-4">
-    <h2>Edit Tag</h2>
-
-    <form asp-action="Edit" method="post">
-        <input type="hidden" asp-for="Id" />
-
-        <div class="mb-3">
-            <label asp-for="Name" class="form-label">Tag Name</label>
-            <input asp-for="Name" class="form-control" required />
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="bi bi-tags"></i> Edit Tag
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form action="@Url.Action("Edit", "Tag", new { id = Model.Id })" method="post">
+                        <div class="mb-3">
+                            <label for="tagName" class="form-label">Tag Name</label>
+                            <input type="text" id="tagName" name="name" class="form-control"
+                                   value="@Model.Name" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="tagColor" class="form-label">Tag Color</label>
+                            <div class="input-group">
+                                <input type="color" id="tagColor" name="color"
+                                       class="form-control form-control-color"
+                                       value="@Model.Color" title="Choose color" required />
+                                <span class="input-group-text" id="colorHex">@Model.Color</span>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-pencil"></i> Update Tag
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
-
-        <div class="mb-3">
-            <label asp-for="Color" class="form-label">Color</label>
-            <input asp-for="Color" type="color" class="form-control form-control-color" required />
-        </div>
-
-        <button type="submit" class="btn btn-primary">Save</button>
-        <a asp-action="ManageTags" class="btn btn-secondary">Cancel</a>
-    </form>
+    </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.getElementById('tagColor').addEventListener('input', function() {
+            document.getElementById('colorHex').textContent = this.value;
+        });
+    </script>
+}
