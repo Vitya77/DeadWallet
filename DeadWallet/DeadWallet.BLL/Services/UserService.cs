@@ -14,6 +14,7 @@ using DeadWallet.DAL.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Http;
 using DeadWallet.BLL.Interfaces;
+using System.Security.Cryptography;
 
 namespace DeadWallet.BLL.Services
 {

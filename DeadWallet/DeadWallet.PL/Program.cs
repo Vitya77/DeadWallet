@@ -28,11 +28,13 @@ builder.Services.AddScoped<IPasswordHasher<DeadWalletUser>, PasswordHasher<DeadW
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IBudgetRepository, BudgetRepository>();
 builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
+builder.Services.AddScoped<ITagRepository, TagRepository>();
 builder.Services.AddScoped<IEmailOtpRepository, EmailOtpRepository>();
 
 builder.Services.AddScoped<UserService, UserService>();
 builder.Services.AddScoped<IBudgetService, BudgetService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
+builder.Services.AddScoped<ITagService, TagService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 
 // JWT auth injection
@@ -113,6 +115,18 @@ app.MapControllerRoute(
     name: "addTransaction",
     pattern: "Transaction/AddTransaction",
     defaults: new { controller = "Transaction", action = "AddTransaction" });
+
+app.MapControllerRoute(
+    name: "editTag",
+    pattern: "Tag/Edit/{id}",
+    defaults: new { controller = "Tag", action = "Edit" });
+
+app.MapControllerRoute(
+    name: "tags",
+    pattern: "Tag/{action=Manage}",
+    defaults: new { controller = "Tag" });
+
+
 
 app.MapStaticAssets();
 app.Run();
