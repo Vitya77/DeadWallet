@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using DeadWallet.BLL.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DeadWallet.PL.Controllers
@@ -11,6 +12,7 @@ namespace DeadWallet.PL.Controllers
         {
             _tagService = tagService;
         }
+
         [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> Tags()
         {
@@ -23,13 +25,14 @@ namespace DeadWallet.PL.Controllers
         public async Task<IActionResult> DeleteTag(int id)
         {
             await _tagService.DeleteTagAsync(id);
-            return RedirectToAction("Tags");
+            return RedirectToAction("Index");
         }
 
         [Authorize(Policy = "AdminOnly")]
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View();
+            var tags = await _tagService.GetAllTagsAsync();
+            return View(tags);
         }
     }
 
