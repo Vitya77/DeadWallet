@@ -14,6 +14,7 @@ namespace DeadWallet.DAL
         public DbSet<UserBudget> UserBudgets { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<Tag> Tags { get; set; }
+        public DbSet<EmailOtp> EmailOtps { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -23,12 +24,17 @@ namespace DeadWallet.DAL
                 Username = "Admin",
                 FirstName = "Admin",
                 LastName = "Admin",
+                Email = "a@a.com",
                 Password = "AQAAAAIAAYagAAAAEGFNYh / EgkDsjALf1Ct6Yv2XG + UrxClo3CNe6IGwRgGZHsgSzxuaPreGUJ7BNZ07yQ ==", // Placeholder, will be updated in the service layer
                 Role = "Admin"
             };
 
             modelBuilder.Entity<DeadWalletUser>().HasData(adminUser);
-    
+
+            modelBuilder.Entity<EmailOtp>()
+                .HasIndex(o => o.Email)
+                .IsUnique(false);
+
             modelBuilder.Entity<UserBudget>()
                 .HasKey(ub => new { ub.UserId, ub.BudgetId });
 

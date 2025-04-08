@@ -4,6 +4,7 @@ using DeadWallet.DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DeadWallet.DAL.Migrations
 {
     [DbContext(typeof(DeadWalletContext))]
-    partial class DeadWalletContextModelSnapshot : ModelSnapshot
+    [Migration("20250407075217_UserEmail")]
+    partial class UserEmail
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -96,7 +99,6 @@ namespace DeadWallet.DAL.Migrations
                         });
                 });
 
-            modelBuilder.Entity("DeadWallet.DAL.Models.Tag", b =>
             modelBuilder.Entity("DeadWallet.DAL.Models.EmailOtp", b =>
                 {
                     b.Property<int>("Id")
@@ -105,17 +107,6 @@ namespace DeadWallet.DAL.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Color")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Tags");
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -158,14 +149,9 @@ namespace DeadWallet.DAL.Migrations
                     b.Property<bool>("IsExpense")
                         .HasColumnType("bit");
 
-                    b.Property<int?>("TagId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("BudgetId");
-
-                    b.HasIndex("TagId");
 
                     b.ToTable("Transactions");
                 });
@@ -204,13 +190,7 @@ namespace DeadWallet.DAL.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("DeadWallet.DAL.Models.Tag", "Tag")
-                        .WithMany()
-                        .HasForeignKey("TagId");
-
                     b.Navigation("Budget");
-
-                    b.Navigation("Tag");
                 });
 
             modelBuilder.Entity("DeadWallet.DAL.Models.UserBudget", b =>

@@ -18,9 +18,9 @@ namespace DeadWallet.DAL.Repositories
             _context = context;
         }
 
-        public async Task<DeadWalletUser?> FindUserByUsernameAsync(string username)
+        public async Task<DeadWalletUser?> FindUserByEmailAsync(string email)
         {
-            return await _context.DeadWalletUsers.FirstOrDefaultAsync(u => u.Username == username);
+            return await _context.DeadWalletUsers.FirstOrDefaultAsync(u => u.Email == email);
         }
 
         public async Task CreateUserAsync(DeadWalletUser user)
