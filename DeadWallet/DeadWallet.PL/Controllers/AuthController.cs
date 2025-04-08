@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using DeadWallet.PL.Models;
 using DeadWaller.Controllers;
 using Microsoft.AspNetCore.Authorization;
+using NuGet.Common;
 
 namespace DeadWallet.PL.Controllers
 {
@@ -22,6 +23,12 @@ namespace DeadWallet.PL.Controllers
         {
             _logger.LogInformation("User visited registration form");
             return View(new RegistrationViewModel());
+        }
+
+        public IActionResult OtpConfirm()
+        {
+            _logger.LogInformation("User visited OTP verification form");
+            return View(new OtpViewModel());
         }
 
         [Authorize]
@@ -50,15 +57,57 @@ namespace DeadWallet.PL.Controllers
                         FirstName = model.FirstName,
                         LastName = model.LastName,
                         Username = model.Username,
+                        Email = model.Email,
                         Password = model.Password
                     };
 
-                    var token = await _userService.RegisterAsync(registerModel);
+                    var result = await _userService.RegisterAsync(registerModel);
 
-                    if (token != null)
+                    if (result.Success) 
                     {
-                        _logger.LogInformation("User was given a token");
-                        Response.Cookies.Append("AuthToken", token, new CookieOptions
+                        Response.Cookies.Append("UserEmail", registerModel.Email, new CookieOptions
+                        {
+                            HttpOnly = true,
+                            Secure = true,
+                            SameSite = SameSiteMode.Strict,
+                            Expires = DateTime.UtcNow.AddDays(1)
+                        });
+                        return RedirectToAction("OtpConfirm", "Auth");
+                    }
+
+                    ModelState.AddModelError("", "Registration failed.");
+                }
+                _logger.LogWarning("Submitted data was invalid");
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                ModelState.AddModelError("", ex.Message);
+                return View(model);
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> OtpConfirm(OtpViewModel model)
+        {
+            _logger.LogInformation("User submitted otp form");
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var email = Request.Cookies["UserEmail"];
+                    if (email == null)
+                    {
+                        _logger.LogInformation("Not found email cookie");
+                        return View(model);
+                    }
+
+                    var result = await _userService.VerifyOtpAsync(email, model.Otp);
+
+                    if (result.Success)
+                    {
+                        Response.Cookies.Append("AuthToken", result.Message, new CookieOptions
                         {
                             HttpOnly = true,
                             Secure = true,
@@ -67,10 +116,9 @@ namespace DeadWallet.PL.Controllers
                         });
 
                         return RedirectToAction("Index", "Home");
-
                     }
 
-                    ModelState.AddModelError("", "Registration failed.");
+                    ModelState.AddModelError("", "Otp code is not valid.");
                 }
                 _logger.LogWarning("Submited data was invalid");
                 return View(model);
@@ -82,7 +130,7 @@ namespace DeadWallet.PL.Controllers
                 return View(model);
             }
         }
-        
+
         [HttpGet]
         public IActionResult Login()
         {
@@ -100,7 +148,7 @@ namespace DeadWallet.PL.Controllers
                 {
                     var loginModel = new LoginModel
                     {
-                        Username = model.Username,
+                        Email = model.Email,
                         Password = model.Password
                     };
 

@@ -7,9 +7,10 @@ using System.Threading.Tasks;
 
 namespace DeadWallet.DAL.Interfaces
 {
-    public interface IUserRepository
+    public interface IEmailOtpRepository
     {
-        Task<DeadWalletUser?> FindUserByEmailAsync(string email);
-        Task CreateUserAsync(DeadWalletUser user);
+        Task SaveOtpAsync(EmailOtp otp);
+        Task<EmailOtp?> GetOtpByEmailAsync(string email);
+        Task DeleteOtpAsync(string email);
     }
 }
