@@ -1,0 +1,26 @@
+﻿@model IEnumerable<DeadWallet.DAL.Models.Tag>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var tag in Model)
+            {
+            <tr>
+                <td>@tag.Id</td>
+                <td>@tag.Name</td>
+                <td>
+                    <form asp-action="DeleteTag" method="post" asp-controller="Admin">
+                        <input type="hidden" name="id" value="@tag.Id" />
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            }
+        </tbody>
+    </table>

@@ -1,14 +1,39 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using DeadWallet.BLL.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DeadWallet.PL.Controllers
 {
     public class AdminController : Controller
     {
-        [Authorize(Policy = "AdminOnly")]
-        public IActionResult Index()
+        private readonly ITagService _tagService;
+
+        public AdminController(ITagService tagService)
         {
-            return View();
+            _tagService = tagService;
+        }
+
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> Tags()
+        {
+            var tags = await _tagService.GetAllTagsAsync();
+            return PartialView("_TagsPartial", tags);
+        }
+
+        [HttpPost]
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> DeleteTag(int id)
+        {
+            await _tagService.DeleteTagAsync(id);
+            return RedirectToAction("Index");
+        }
+
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> Index()
+        {
+            var tags = await _tagService.GetAllTagsAsync();
+            return View(tags);
         }
     }
+
 }
