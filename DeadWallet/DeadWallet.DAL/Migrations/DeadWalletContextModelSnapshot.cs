@@ -97,7 +97,6 @@ namespace DeadWallet.DAL.Migrations
                 });
 
             modelBuilder.Entity("DeadWallet.DAL.Models.Tag", b =>
-            modelBuilder.Entity("DeadWallet.DAL.Models.EmailOtp", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -116,6 +115,15 @@ namespace DeadWallet.DAL.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Tags");
+                });
+            modelBuilder.Entity("DeadWallet.DAL.Models.EmailOtp", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
