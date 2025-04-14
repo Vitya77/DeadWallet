@@ -9,12 +9,15 @@ namespace DeadWallet.PL.Controllers
     {
         private readonly ITransactionService _transactionService;
         private readonly ILogger<TransactionController> _logger;
+        private readonly ITagService _tagService;
 
         public TransactionController(
-            ITransactionService transactionService,
-            ILogger<TransactionController> logger)
+        ITransactionService transactionService,
+        ITagService tagService,
+        ILogger<TransactionController> logger)
         {
             _transactionService = transactionService;
+            _tagService = tagService;
             _logger = logger;
         }
 
@@ -47,14 +50,15 @@ namespace DeadWallet.PL.Controllers
                 Amount = model.Amount,
                 Description = model.Description ?? string.Empty,
                 IsExpense = model.IsExpense,
-                BudgetId = model.BudgetId
+                BudgetId = model.BudgetId,
+                TagId = model.TagId
             };
 
             var result = await _transactionService.AddTransactionAsync(transaction);
 
             if (result.Success)
             {
-                _logger.LogInformation($"Transaction added successfully. Type: {(model.IsExpense ? "Expense" : "Income")}, Amount: {model.Amount:C}");
+                _logger.LogInformation($"Transaction added successfully. Type: {(model.IsExpense ? "Expense" : "Income")}, Amount: {model.Amount:C}, TagId: {model.TagId}");
             }
             else
             {
@@ -81,6 +85,36 @@ namespace DeadWallet.PL.Controllers
 
             string budgetName = transactions.FirstOrDefault()?.Budget?.Title ?? "unknown budget";
             ViewBag.BudgetName = budgetName;
+
+            try
+            {
+                var allTags = await _tagService.GetAllTagsAsync();
+                ViewBag.Tags = allTags.ToDictionary(tag => tag.Id, tag => tag);
+
+                _logger.LogInformation($"Loaded {allTags.Count()} tags.");
+
+                foreach (var transaction in transactions)
+                {
+                    if (transaction.TagId.HasValue)
+                    {
+                        var tag = allTags.FirstOrDefault(t => t.Id == transaction.TagId.Value);
+                        if (tag != null)
+                        {
+                            _logger.LogInformation($"Transaction ID: {transaction.Id} is tagged with: {tag.Name} (TagId: {tag.Id})");
+                        }
+                        else
+                        {
+                            _logger.LogWarning($"Transaction ID: {transaction.Id} has a TagId: {transaction.TagId.Value} but no tag found in the list.");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning($"Could not load tags for transactions view: {ex.Message}");
+                ViewBag.Tags = new Dictionary<int, Tag>();
+            }
+
             return View(transactions);
         }
     }

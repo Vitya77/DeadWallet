@@ -1,113 +1,53 @@
 ﻿@model List<DeadWallet.DAL.Models.Transaction>
-@inject DeadWallet.BLL.Interfaces.ITransactionService _transactionService
-
 @{
-    ViewData["Title"] = "Історія транзакцій для " + ViewBag.BudgetName;
+    ViewData["Title"] = "Історія транзакцій";
+    var tagsDict = ViewBag.Tags as Dictionary<int, DeadWallet.DAL.Models.Tag>;
 }
 
-@* <div class="container mt-5"> *@
-@*     <h2>Історія транзакцій для @ViewBag.BudgetName</h2> *@
-@*     <div class="mb-3"> *@
-@*         <input type="text" id="searchTransactions" class="form-control" placeholder="Пошук за описом..."> *@
-@*     </div> *@
-@*     <table class="table table-striped"> *@
-@*         <thead> *@
-@*         <tr> *@
-@*             <th>Опис</th> *@
-@*             <th>Сума</th> *@
-@*             <th>Дата</th> *@
-@*             <th>Тип</th> *@
-@*         </tr> *@
-@*         </thead> *@
-@*         <tbody id="transactionTableBody"> *@
-@*         @foreach (var transaction in Model) *@
-@*         { *@
-@*             <tr> *@
-@*                 <td>@(string.IsNullOrEmpty(transaction.Description) ? "Без опису" : transaction.Description)</td> *@
-@*                 <td>@transaction.Amount.ToString("C")</td> *@
-@*                 <td class="transaction-date">@transaction.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td> *@
-@*                 <td> *@
-@*                     <span class="badge @(transaction.IsExpense ? "bg-danger" : "bg-success")"> *@
-@*                         @(transaction.IsExpense ? "Витрата" : "Дохід") *@
-@*                     </span> *@
-@*                 </td> *@
-@*             </tr> *@
-@*         } *@
-@*         </tbody> *@
-@*     </table> *@
-@* </div> *@
-@* *@
-@* <script> *@
-@*     document.getElementById("searchTransactions").addEventListener("input", function () { *@
-@*         let filter = this.value.toLowerCase(); *@
-@*         let rows = document.querySelectorAll("#transactionTableBody tr"); *@
-@* *@
-@*         rows.forEach(row => { *@
-@*             let description = row.cells[0].innerText.toLowerCase(); *@
-@*             row.style.display = description.includes(filter) ? "" : "none"; *@
-@*         }); *@
-@*     }); *@
-@* </script> *@
+<h2>Історія транзакцій</h2>
 
- 
-<div class="container" >
-    <h4>Transaction History</h4>
-    <div class="mb-3">
-        <input type="text" id="searchTransactions" class="form-control" placeholder="Search by description...">
-    </div>
-    <table class="table table-striped">
-        <thead>
+<table class="table table-hover mt-4">
+    <thead class="table-dark">
         <tr>
-            <th>Description</th>
-            <th>Amount</th>
-            <th>
-                Date
-                <button id="sortDateBtn" class="btn btn-sm btn-outline-secondary">Sort</button>
-            </th>
-            <th>Type</th>
+            <th>Опис</th>
+            <th>Тег</th>
+            <th>Сума</th>
+            <th>Дата</th>
+            <th>Тип</th>
         </tr>
-        </thead>
-        <tbody id="transactionTableBody">
-        @{ var allTransactions = (await _transactionService.GetAllTransactionsAsync()).Res.OrderBy(t => t.CreatedAt); }
-        @foreach (var transaction in allTransactions.OrderBy(t => t.CreatedAt))
+    </thead>
+    <tbody>
+        @foreach (var transaction in Model)
         {
             <tr>
-                <td>@(string.IsNullOrEmpty(transaction.Description) ? "No description" : transaction.Description)</td>
+                <td>
+                    @(string.IsNullOrEmpty(transaction.Description) ? "Без опису" : transaction.Description)
+                </td>
+                <td>
+                    @if (transaction.TagId.HasValue && tagsDict != null && tagsDict.ContainsKey(transaction.TagId.Value))
+                    {
+                        var tag = tagsDict[transaction.TagId.Value];
+                        <span class="badge rounded-pill d-inline-flex align-items-center"
+                              style="background-color:@tag.Color; color:white; padding: 0.25em 0.6em; font-size:0.8em;">
+                            <i class="bi bi-tag-fill me-1" style="font-size:0.7em;"></i>
+                            @tag.Name
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="text-muted">—</span>
+                    }
+                </td>
                 <td>@transaction.Amount.ToString("C")</td>
                 <td class="transaction-date">@transaction.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
                 <td>
                     <span class="badge @(transaction.IsExpense ? "bg-danger" : "bg-success")">
-                        @(transaction.IsExpense ? "Expense" : "Income")
+                        @(transaction.IsExpense ? "Витрата" : "Дохід")
                     </span>
                 </td>
             </tr>
         }
-        </tbody>
-    </table>
-</div>
+    </tbody>
+</table>
 
-<script>
-    document.getElementById("searchTransactions").addEventListener("input", function () {
-        let filter = this.value.toLowerCase();
-        let rows = document.querySelectorAll("#transactionTableBody tr");
-
-        rows.forEach(row => {
-            let description = row.cells[0].innerText.toLowerCase();
-            row.style.display = description.includes(filter) ? "" : "none";
-        });
-    });
-
-    document.getElementById("sortDateBtn").addEventListener("click", function () {
-        let tableBody = document.getElementById("transactionTableBody");
-        let rows = Array.from(tableBody.querySelectorAll("tr"));
-
-        let sortedRows = rows.sort((a, b) => {
-            let dateA = new Date(a.querySelector(".transaction-date").innerText);
-            let dateB = new Date(b.querySelector(".transaction-date").innerText);
-            return dateB - dateA;
-        });
-
-        tableBody.innerHTML = "";
-        sortedRows.forEach(row => tableBody.appendChild(row));
-    });
-</script>         
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">

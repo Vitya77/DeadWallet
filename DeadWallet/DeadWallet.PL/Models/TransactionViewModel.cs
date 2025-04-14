@@ -17,5 +17,7 @@ namespace DeadWallet.PL.Models
 
         [Required]
         public int BudgetId { get; set; }
+
+        public int? TagId { get; set; }
     }
 }
