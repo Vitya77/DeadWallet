@@ -11,5 +11,6 @@ namespace DeadWallet.DAL.Interfaces
     {
         Task<DeadWalletUser?> FindUserByEmailAsync(string email);
         Task CreateUserAsync(DeadWalletUser user);
+        Task UpdateUserAsync(DeadWalletUser user);
     }
 }

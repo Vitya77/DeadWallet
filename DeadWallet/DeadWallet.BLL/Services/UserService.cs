@@ -148,5 +148,38 @@ namespace DeadWallet.BLL.Services
 
             return new Result { Success = true, Message = GenerateJwtToken(user) };
         }
+
+        public async Task<Result> sendOtpAsync(string email)
+        {
+            var otpCode = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
+            var otp = new EmailOtp
+            {
+                Email = email,
+                Code = otpCode,
+                Expiration = DateTime.UtcNow.AddMinutes(5)
+            };
+
+            await _otpRepository.SaveOtpAsync(otp);
+            await _emailService.SendOtpAsync(email, otpCode);
+
+            return new Result { Success = true };
+        }
+
+        public async Task<Result> ResetPasswordAsync(string email, string otpCode, string newPassword)
+        {
+            var otp = await _otpRepository.GetOtpByEmailAsync(email);
+            if (otp == null || otp.Expiration < DateTime.UtcNow || otp.Code != otpCode)
+                return new Result { Success = false, Message = "Invalid or expired OTP" };
+
+            var user = await _userRepository.FindUserByEmailAsync(email);
+            if (user == null)
+                return new Result { Success = false, Message = "User not found" };
+
+            user.Password = _passwordHasher.HashPassword(user, newPassword);
+            await _userRepository.UpdateUserAsync(user);
+            await _otpRepository.DeleteOtpAsync(email);
+
+            return new Result { Success = true };
+        }
     }
 }

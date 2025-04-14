@@ -31,6 +31,18 @@ namespace DeadWallet.PL.Controllers
             return View(new OtpViewModel());
         }
 
+        public IActionResult RecoverPassword()
+        {
+            _logger.LogInformation("User visited recover password form");
+            return View(new RecoverPasswordViewModel());
+        }
+
+        public IActionResult RecoverPasswordEmail()
+        {
+            _logger.LogInformation("User visited email recover password form");
+            return View(new EmailRecoverPasswordViewModel());
+        }
+
         [Authorize]
         public IActionResult Logout()
         {
@@ -41,8 +53,6 @@ namespace DeadWallet.PL.Controllers
 
             return RedirectToAction("Index", "Home");
         }
-
-
 
         [HttpPost]
         public async Task<IActionResult> Register(RegistrationViewModel model)
@@ -121,6 +131,75 @@ namespace DeadWallet.PL.Controllers
                     ModelState.AddModelError("", "Otp code is not valid.");
                 }
                 _logger.LogWarning("Submited data was invalid");
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                ModelState.AddModelError("", ex.Message);
+                return View(model);
+            }
+        }
+        [HttpPost]
+        public async Task<IActionResult> RecoverPassword(RecoverPasswordViewModel model)
+        {
+            _logger.LogInformation("User submitted recover password form");
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var email = Request.Cookies["UserEmail"];
+                    if (email == null)
+                    {
+                        _logger.LogInformation("Not found email cookie");
+                        return View(model);
+                    }
+
+                    var result = await _userService.ResetPasswordAsync(email, model.OtpCode, model.Password);
+
+                    if (result.Success)
+                    {
+                        return RedirectToAction("Login", "Auth");
+                    }
+
+                    ModelState.AddModelError("", "Otp code is not valid.");
+                }
+                _logger.LogWarning("Submited data was invalid");
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                ModelState.AddModelError("", ex.Message);
+                return View(model);
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RecoverPasswordEmail(EmailRecoverPasswordViewModel model)
+        {
+            _logger.LogInformation("User submited email recover password form");
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var result = await _userService.sendOtpAsync(model.Email);
+
+                    if (result.Success)
+                    {
+                        Response.Cookies.Append("UserEmail", model.Email, new CookieOptions
+                        {
+                            HttpOnly = true,
+                            Secure = true,
+                            SameSite = SameSiteMode.Strict,
+                            Expires = DateTime.UtcNow.AddDays(1)
+                        });
+                        return RedirectToAction("RecoverPassword", "Auth");
+                    }
+
+                    ModelState.AddModelError("", "Sending otp code failed.");
+                }
+                _logger.LogWarning("Submitted data was invalid");
                 return View(model);
             }
             catch (Exception ex)

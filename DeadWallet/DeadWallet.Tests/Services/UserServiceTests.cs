@@ -281,4 +281,66 @@ public class UserServiceTests
         Assert.IsType<string>(result.Message);
     }
 
+    [Fact]
+    public async Task SendOtpAsync_ValidEmail_SavesOtpAndSendsEmail()
+    {
+        // Arrange
+        var email = "user@example.com";
+
+        _mockOtpRepository
+            .Setup(repo => repo.SaveOtpAsync(It.IsAny<EmailOtp>()))
+            .Returns(Task.CompletedTask);
+
+        _mockEmailService
+            .Setup(service => service.SendOtpAsync(email, It.IsAny<string>()))
+            .Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _userService.sendOtpAsync(email);
+
+        // Assert
+        Assert.True(result.Success);
+        _mockOtpRepository.Verify(repo => repo.SaveOtpAsync(It.Is<EmailOtp>(o => o.Email == email)), Times.Once);
+        _mockEmailService.Verify(service => service.SendOtpAsync(email, It.IsAny<string>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ResetPasswordAsync_ValidOtpAndUser_ResetsPasswordAndDeletesOtp()
+    {
+        // Arrange
+        var email = "user@example.com";
+        var otpCode = "123456";
+        var newPassword = "newPassword123";
+
+        var otp = new EmailOtp
+        {
+            Email = email,
+            Code = otpCode,
+            Expiration = DateTime.UtcNow.AddMinutes(5)
+        };
+
+        var user = new DeadWalletUser
+        {
+            Email = email,
+            Password = "oldPasswordHash",
+            FirstName = "John",
+            LastName = "Doe",
+            Username = "johndoe"    
+        };
+
+        _mockOtpRepository.Setup(repo => repo.GetOtpByEmailAsync(email)).ReturnsAsync(otp);
+        _mockUserRepository.Setup(repo => repo.FindUserByEmailAsync(email)).ReturnsAsync(user);
+        _mockPasswordHasher.Setup(hasher => hasher.HashPassword(user, newPassword)).Returns("newHashedPassword");
+        _mockUserRepository.Setup(repo => repo.UpdateUserAsync(user)).Returns(Task.CompletedTask);
+        _mockOtpRepository.Setup(repo => repo.DeleteOtpAsync(email)).Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _userService.ResetPasswordAsync(email, otpCode, newPassword);
+
+        // Assert
+        Assert.True(result.Success);
+        _mockUserRepository.Verify(repo => repo.UpdateUserAsync(It.Is<DeadWalletUser>(u => u.Password == "newHashedPassword")), Times.Once);
+        _mockOtpRepository.Verify(repo => repo.DeleteOtpAsync(email), Times.Once);
+    }
+
 }
