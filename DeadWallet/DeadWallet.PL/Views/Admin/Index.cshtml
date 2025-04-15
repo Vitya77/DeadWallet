@@ -46,6 +46,11 @@
                         {
                             @await Html.PartialAsync("_TagsPartial", Model)
                         }
+                        else if (tabs[i] == "Users")
+                        {
+                            @await Html.PartialAsync("_UsersPartial", ViewBag.Users)
+                        }
+
                 </div>
                 }
             </div>
