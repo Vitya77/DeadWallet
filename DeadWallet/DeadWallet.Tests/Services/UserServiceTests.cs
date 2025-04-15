@@ -348,8 +348,8 @@ public class UserServiceTests
         // Arrange
         var users = new List<DeadWalletUser>
         {
-            new DeadWalletUser { Id = 1, Username = "User1" },
-            new DeadWalletUser { Id = 2, Username = "User2" }
+            new DeadWalletUser { Id = 1, Username = "User1", Email = "", LastName = "", FirstName = "", Password = "" },
+            new DeadWalletUser { Id = 2, Username = "User2", Email = "", LastName = "", FirstName = "", Password = "" }
         };
 
         _mockUserRepository
@@ -373,6 +373,10 @@ public class UserServiceTests
         {
             Id = 2,
             Username = "NonAdmin",
+            Email = "",
+            LastName = "",
+            FirstName = "",
+            Password = "",
             Role = "User"
         };
 
@@ -396,6 +400,10 @@ public class UserServiceTests
         {
             Id = 1,
             Username = "AdminUser",
+            Email = "",
+            LastName = "",
+            FirstName = "",
+            Password = "",
             Role = "Admin"
         };
 
