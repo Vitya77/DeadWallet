@@ -35,5 +35,19 @@ namespace DeadWallet.DAL.Repositories
             await _context.SaveChangesAsync();
         }
 
+        public async Task<List<DeadWalletUser>> GetAllUsersAsync()
+        {
+            return await _context.DeadWalletUsers.ToListAsync();
+        }
+
+        public async Task DeleteUserByIdAsync(Guid id)
+        {
+            var user = await _context.DeadWalletUsers.FindAsync(id);
+            if (user != null)
+            {
+                _context.DeadWalletUsers.Remove(user);
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }
