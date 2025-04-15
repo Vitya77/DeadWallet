@@ -342,5 +342,78 @@ public class UserServiceTests
         _mockUserRepository.Verify(repo => repo.UpdateUserAsync(It.Is<DeadWalletUser>(u => u.Password == "newHashedPassword")), Times.Once);
         _mockOtpRepository.Verify(repo => repo.DeleteOtpAsync(email), Times.Once);
     }
+    [Fact]
+    public async Task GetAllUsersAsync_ReturnsListOfUsers()
+    {
+        // Arrange
+        var users = new List<DeadWalletUser>
+        {
+            new DeadWalletUser { Id = 1, Username = "User1" },
+            new DeadWalletUser { Id = 2, Username = "User2" }
+        };
+
+        _mockUserRepository
+            .Setup(repo => repo.GetAllUsersAsync())
+            .ReturnsAsync(users);
+
+        // Act
+        var result = await _userService.GetAllUsersAsync();
+
+        // Assert
+        Assert.True(result.Success);
+        Assert.NotNull(result.Res);
+        Assert.Equal(2, result.Res.Count);
+    }
+
+    [Fact]
+    public async Task DeleteUserByIdAsync_UserIsNotAdmin_ReturnsAccessDenied()
+    {
+        // Arrange
+        var currentUser = new DeadWalletUser
+        {
+            Id = 2,
+            Username = "NonAdmin",
+            Role = "User"
+        };
+
+        _mockUserRepository
+            .Setup(repo => repo.FindUserByIdAsync(currentUser.Id))
+            .ReturnsAsync(currentUser);
+
+        // Act
+        var result = await _userService.DeleteUserByIdAsync(1, currentUser.Id);
+
+        // Assert
+        Assert.False(result.Success);
+        Assert.Equal("Access denied. Only admin can perform this action.", result.Message);
+    }
+
+    [Fact]
+    public async Task DeleteUserByIdAsync_UserIsAdmin_DeletesUserAndReturnsSuccess()
+    {
+        // Arrange
+        var currentUser = new DeadWalletUser
+        {
+            Id = 1,
+            Username = "AdminUser",
+            Role = "Admin"
+        };
+
+        _mockUserRepository
+            .Setup(repo => repo.FindUserByIdAsync(currentUser.Id))
+            .ReturnsAsync(currentUser);
+
+        _mockUserRepository
+            .Setup(repo => repo.DeleteUserByIdAsync(2))
+            .Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _userService.DeleteUserByIdAsync(2, currentUser.Id);
+
+        // Assert
+        Assert.True(result.Success);
+        Assert.Equal("User deleted successfully", result.Message);
+        _mockUserRepository.Verify(repo => repo.DeleteUserByIdAsync(2), Times.Once);
+    }
 
 }
