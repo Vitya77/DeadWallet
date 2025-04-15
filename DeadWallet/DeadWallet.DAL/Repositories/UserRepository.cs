@@ -28,5 +28,12 @@ namespace DeadWallet.DAL.Repositories
             await _context.DeadWalletUsers.AddAsync(user);
             await _context.SaveChangesAsync();
         }
+
+        public async Task UpdateUserAsync(DeadWalletUser user)
+        {
+            _context.DeadWalletUsers.Update(user);
+            await _context.SaveChangesAsync();
+        }
+
     }
 }

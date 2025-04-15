@@ -17,6 +17,8 @@
             <span asp-validation-for="Password" class="text-danger"></span>
         </div>
 
+        <a class="btn btn-secondary mt-2" asp-controller="Auth" asp-action="RecoverPasswordEmail">Forgot the password?</a>
+
         @if (!ViewData.ModelState.IsValid)
         {
             <div>
