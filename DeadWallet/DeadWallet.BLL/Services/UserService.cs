@@ -148,20 +148,16 @@ namespace DeadWallet.BLL.Services
 
             return new Result { Success = true, Message = GenerateJwtToken(user) };
         }
-        // Отримати всіх користувачів (тільки для Адміна)
-        public async Task<List<DeadWalletUser>> GetAllUsersAsync(DeadWalletUser currentUser)
-        {
-            if (currentUser.Role != "Admin")
-            {
-                return new Result { Success = false, Message = "Access denied. Only admin can perform this action." };
-            }
 
-            return await _userRepository.GetAllUsersAsync();
+        public async Task<Result<List<DeadWalletUser>>> GetAllUsersAsync()
+        {
+            return new Result<List<DeadWalletUser>> { Success = true, Res = await _userRepository.GetAllUsersAsync() };
         }
 
-        // Видалити користувача по Id (тільки для Адміна)
-        public async Task<Result> DeleteUserByIdAsync(Guid id, DeadWalletUser currentUser)
+        public async Task<Result> DeleteUserByIdAsync(int id, int currentUserId)
         {
+            var currentUser = await _userRepository.FindUserByIdAsync(currentUserId);
+
             if (currentUser.Role != "Admin")
             {
                 return new Result { Success = false, Message = "Access denied. Only admin can perform this action." };
@@ -171,41 +167,38 @@ namespace DeadWallet.BLL.Services
             return new Result { Success = true, Message = "User deleted successfully" };
         }
 
-    }
-
-    public async Task<Result> sendOtpAsync(string email)
-    {
-        var otpCode = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
-        var otp = new EmailOtp
+        public async Task<Result> sendOtpAsync(string email)
         {
-            Email = email,
-            Code = otpCode,
-            Expiration = DateTime.UtcNow.AddMinutes(5)
-        };
+            var otpCode = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
+            var otp = new EmailOtp
+            {
+                Email = email,
+                Code = otpCode,
+                Expiration = DateTime.UtcNow.AddMinutes(5)
+            };
 
-        await _otpRepository.SaveOtpAsync(otp);
-        await _emailService.SendOtpAsync(email, otpCode);
+            await _otpRepository.SaveOtpAsync(otp);
+            await _emailService.SendOtpAsync(email, otpCode);
 
-        return new Result { Success = true };
+            return new Result { Success = true };
+        }
+
+        public async Task<Result> ResetPasswordAsync(string email, string otpCode, string newPassword)
+        {
+            var otp = await _otpRepository.GetOtpByEmailAsync(email);
+            if (otp == null || otp.Expiration < DateTime.UtcNow || otp.Code != otpCode)
+                return new Result { Success = false, Message = "Invalid or expired OTP" };
+
+            var user = await _userRepository.FindUserByEmailAsync(email);
+            if (user == null)
+                return new Result { Success = false, Message = "User not found" };
+
+            user.Password = _passwordHasher.HashPassword(user, newPassword);
+            await _userRepository.UpdateUserAsync(user);
+            await _otpRepository.DeleteOtpAsync(email);
+
+            return new Result { Success = true };
+        }
     }
-
-    public async Task<Result> ResetPasswordAsync(string email, string otpCode, string newPassword)
-    {
-        var otp = await _otpRepository.GetOtpByEmailAsync(email);
-        if (otp == null || otp.Expiration < DateTime.UtcNow || otp.Code != otpCode)
-            return new Result { Success = false, Message = "Invalid or expired OTP" };
-
-        var user = await _userRepository.FindUserByEmailAsync(email);
-        if (user == null)
-            return new Result { Success = false, Message = "User not found" };
-
-        user.Password = _passwordHasher.HashPassword(user, newPassword);
-        await _userRepository.UpdateUserAsync(user);
-        await _otpRepository.DeleteOtpAsync(email);
-
-        return new Result { Success = true };
-    }
-
-
 }
 

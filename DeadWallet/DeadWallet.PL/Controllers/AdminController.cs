@@ -2,6 +2,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using DeadWallet.DAL.Models;
+using DeadWallet.BLL.Services;
+using System.Security.Claims;
+using DeadWallet.PL.Models;
 
 namespace DeadWallet.PL.Controllers
 {
@@ -9,9 +12,9 @@ namespace DeadWallet.PL.Controllers
     public class AdminController : Controller
     {
         private readonly ITagService _tagService;
-        private readonly IUserService _userService;
+        private readonly UserService _userService;
 
-        public AdminController(ITagService tagService, IUserService userService)
+        public AdminController(ITagService tagService, UserService userService)
         {
             _tagService = tagService;
             _userService = userService;
@@ -20,12 +23,10 @@ namespace DeadWallet.PL.Controllers
         public async Task<IActionResult> Index()
         {
             var tags = await _tagService.GetAllTagsAsync();
-            var currentUser = await GetCurrentUserAsync();
-            var users = await _userService.GetAllUsersAsync(currentUser);
-            ViewBag.Users = users;
-            return View(tags);
-        }
+            var users = await _userService.GetAllUsersAsync();
 
+            return View(new AdminViewModel { tags = tags, users = users.Res });
+        }
 
         public async Task<IActionResult> Tags()
         {
@@ -35,16 +36,27 @@ namespace DeadWallet.PL.Controllers
 
         public async Task<IActionResult> Users()
         {
-            var currentUser = await GetCurrentUserAsync(); // Реалізуй метод витягування юзера з токена
-            var users = await _userService.GetAllUsersAsync(currentUser);
+            var users = await _userService.GetAllUsersAsync();
             return PartialView("_UsersPartial", users);
         }
 
         [HttpPost]
-        public async Task<IActionResult> DeleteUser(Guid id)
+        public async Task<IActionResult> DeleteUser(int id)
         {
-            var currentUser = await GetCurrentUserAsync();
-            await _userService.DeleteUserByIdAsync(id, currentUser);
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null)
+            {
+                return Redirect("/Home");
+            }
+
+            int parsedUserId;
+            if (!int.TryParse(userId, out parsedUserId))
+            {
+                return Redirect("/Home");
+            }
+
+            await _userService.DeleteUserByIdAsync(id, parsedUserId);
             return RedirectToAction("Index");
         }
 
