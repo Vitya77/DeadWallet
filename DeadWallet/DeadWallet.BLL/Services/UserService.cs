@@ -149,6 +149,24 @@ namespace DeadWallet.BLL.Services
             return new Result { Success = true, Message = GenerateJwtToken(user) };
         }
 
+        public async Task<Result<List<DeadWalletUser>>> GetAllUsersAsync()
+        {
+            return new Result<List<DeadWalletUser>> { Success = true, Res = await _userRepository.GetAllUsersAsync() };
+        }
+
+        public async Task<Result> DeleteUserByIdAsync(int id, int currentUserId)
+        {
+            var currentUser = await _userRepository.FindUserByIdAsync(currentUserId);
+
+            if (currentUser.Role != "Admin")
+            {
+                return new Result { Success = false, Message = "Access denied. Only admin can perform this action." };
+            }
+
+            await _userRepository.DeleteUserByIdAsync(id);
+            return new Result { Success = true, Message = "User deleted successfully" };
+        }
+
         public async Task<Result> sendOtpAsync(string email)
         {
             var otpCode = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
@@ -183,3 +201,4 @@ namespace DeadWallet.BLL.Services
         }
     }
 }
+

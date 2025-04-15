@@ -10,7 +10,10 @@ namespace DeadWallet.DAL.Interfaces
     public interface IUserRepository
     {
         Task<DeadWalletUser?> FindUserByEmailAsync(string email);
+        Task<DeadWalletUser?> FindUserByIdAsync(int id);
         Task CreateUserAsync(DeadWalletUser user);
         Task UpdateUserAsync(DeadWalletUser user);
+        Task<List<DeadWalletUser>> GetAllUsersAsync();
+        Task DeleteUserByIdAsync(int id);
     }
 }

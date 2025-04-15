@@ -1,4 +1,4 @@
-﻿@model IEnumerable<DeadWallet.DAL.Models.Tag>
+﻿@model AdminViewModel
 @{
     ViewData["Title"] = "AdminPanel";
 }
@@ -44,8 +44,13 @@
 
                         @if (tabs[i] == "Tags")
                         {
-                            @await Html.PartialAsync("_TagsPartial", Model)
+                            @await Html.PartialAsync("_TagsPartial", Model.tags)
                         }
+                        else if (tabs[i] == "Users")
+                        {
+                            @await Html.PartialAsync("_UsersPartial", Model.users)
+                        }
+
                 </div>
                 }
             </div>
