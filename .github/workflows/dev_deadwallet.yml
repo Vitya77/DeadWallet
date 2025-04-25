@@ -27,7 +27,7 @@ jobs:
         run: cd ./DeadWallet/
 
       - name: Build with dotnet
-        run: dotnet build --configuration Release
+        run: dotnet build DeadWallet.sln --configuration Release
 
       - name: dotnet publish
         run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
