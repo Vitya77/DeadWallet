@@ -23,8 +23,11 @@ jobs:
         with:
           dotnet-version: '9.x'
 
+      - name: Move to project
+        run: cd ./DeadWallet.PL/
+
       - name: Build with dotnet
-        run: dotnet build --configuration Release --startup-project ./DeadWallet.PL
+        run: dotnet build --configuration Release
 
       - name: dotnet publish
         run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
