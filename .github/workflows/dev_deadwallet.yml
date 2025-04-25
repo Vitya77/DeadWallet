@@ -26,6 +26,9 @@ jobs:
       - name: Move to project
         run: cd ./DeadWallet/
 
+      - name: Debug
+        run: ls
+
       - name: Build with dotnet
         run: dotnet build DeadWallet.sln --configuration Release
 
