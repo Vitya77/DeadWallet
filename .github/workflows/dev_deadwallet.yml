@@ -24,7 +24,7 @@ jobs:
           dotnet-version: '9.x'
 
       - name: Move to project
-        run: cd ./DeadWallet.PL/
+        run: cd ./DeadWallet/
 
       - name: Build with dotnet
         run: dotnet build --configuration Release
