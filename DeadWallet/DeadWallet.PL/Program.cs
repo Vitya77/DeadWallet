@@ -20,7 +20,23 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 builder.Services.AddDbContext<DeadWalletContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DeadWallerContext") ?? throw new InvalidOperationException("Connection string 'DeadWallerContext' not found.")));
+{
+    var prodConnectionString = builder.Configuration.GetConnectionString("DeadWallerContextProd");
+    var devConnectionString = builder.Configuration.GetConnectionString("DeadWallerContextDev");
+
+    if (!string.IsNullOrEmpty(prodConnectionString))
+    {
+        options.UseNpgsql(prodConnectionString);
+    }
+    else if (!string.IsNullOrEmpty(devConnectionString))
+    {
+        options.UseSqlServer(devConnectionString);
+    }
+    else
+    {
+        throw new InvalidOperationException("No valid connection string found. Please configure 'DeadWallerContextProd' or 'DeadWallerContextDev' in appsettings.json.");
+    }
+});
 
 // Password hasher injection
 builder.Services.AddScoped<IPasswordHasher<DeadWalletUser>, PasswordHasher<DeadWalletUser>>();
