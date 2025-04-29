@@ -16,15 +16,18 @@ using Azure.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var keyVaultUri = new Uri("https://deadwallet.vault.azure.net/");
-builder.Configuration.AddAzureKeyVault(keyVaultUri, new DefaultAzureCredential());
+if (builder.Environment.IsProduction())
+{
+    var keyVaultUri = new Uri("https://deadwallet.vault.azure.net/");
+    builder.Configuration.AddAzureKeyVault(keyVaultUri, new DefaultAzureCredential());
 
-var config = builder.Configuration;
-builder.Configuration["ConnectionStrings:DeadWallerContextDev"] = config["db-connection-string"];
-builder.Configuration["Email:From"] = config["EmailFrom"];
-builder.Configuration["Email:Password"] = config["EmailPassword"];
-builder.Configuration["Email:SmtpHost"] = config["SmtpHost"];
-builder.Configuration["Email:SmtpPort"] = config["SmtpPort"];
+    var config = builder.Configuration;
+    builder.Configuration["ConnectionStrings:DeadWallerContextDev"] = config["db-connection-string"];
+    builder.Configuration["Email:From"] = config["EmailFrom"];
+    builder.Configuration["Email:Password"] = config["EmailPassword"];
+    builder.Configuration["Email:SmtpHost"] = config["SmtpHost"];
+    builder.Configuration["Email:SmtpPort"] = config["SmtpPort"];
+}
 
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
