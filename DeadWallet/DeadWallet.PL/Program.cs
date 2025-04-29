@@ -11,8 +11,20 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using DeadWallet.DAL.Interfaces;
 using DeadWallet.BLL.Interfaces;
+using Azure.Identity;
+
 
 var builder = WebApplication.CreateBuilder(args);
+
+var keyVaultUri = new Uri("https://deadwallet.vault.azure.net/");
+builder.Configuration.AddAzureKeyVault(keyVaultUri, new DefaultAzureCredential());
+
+var config = builder.Configuration;
+builder.Configuration["ConnectionStrings:DeadWallerContextDev"] = config["db-connection-string"];
+builder.Configuration["Email:From"] = config["EmailFrom"];
+builder.Configuration["Email:Password"] = config["EmailPassword"];
+builder.Configuration["Email:SmtpHost"] = config["SmtpHost"];
+builder.Configuration["Email:SmtpPort"] = config["SmtpPort"];
 
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
@@ -37,6 +49,7 @@ builder.Services.AddDbContext<DeadWalletContext>(options =>
         throw new InvalidOperationException("No valid connection string found. Please configure 'DeadWallerContextProd' or 'DeadWallerContextDev' in appsettings.json.");
     }
 });
+
 
 // Password hasher injection
 builder.Services.AddScoped<IPasswordHasher<DeadWalletUser>, PasswordHasher<DeadWalletUser>>();
