@@ -1,4 +1,4 @@
-﻿@model IEnumerable<DeadWallet.DAL.Models.Budget>
+﻿@model List<IEnumerable<DeadWallet.DAL.Models.Budget>>
 @inject DeadWallet.BLL.Interfaces.ITransactionService _transactionService
 @inject DeadWallet.BLL.Interfaces.ITagService _tagService
 @using DeadWallet.DAL.Models
@@ -6,20 +6,34 @@
 @{
     ViewData["Title"] = "Dashboard";
     var tags = await _tagService.GetAllTagsAsync();
+    var budgets = Model[0].Concat(Model[1]);
+    var ownedBudgets = Model[0].Count();
 }
 
 <div class="container mt-5 budgets-container">
     <div class="row h-100">
         <div class="col-md-3 d-flex flex-column justify-content-between align-items-center h-100">
             <div class="list-group w-100" id="v-tabs-list" role="tablist">
-                @for (int i = 0; i < Model.Count(); i++)
+                <h5 class="my-4">Owned budgets</h5>
+                @for (int i = 0; i < ownedBudgets; i++)
                 {
                     <a class="list-group-item list-group-item-action @(i == 0 ? "active" : "")"
                        id="@($"v-tab{i}")"
                        data-bs-toggle="list"
                        href="@($"#v-tab{i}-content")"
                        role="tab">
-                        @Model.ToList()[i].Title
+                        @budgets.ToList()[i].Title
+                    </a>
+                }
+                <h5 class="my-4">Shared budgets</h5>
+                @for (int i = ownedBudgets; i < budgets.Count(); i++)
+                {
+                    <a class="list-group-item list-group-item-action @(i == 0 ? "active" : "")"
+                       id="@($"v-tab{i}")"
+                       data-bs-toggle="list"
+                       href="@($"#v-tab{i}-content")"
+                       role="tab">
+                        @budgets.ToList()[i].Title
                     </a>
                 }
             </div>
@@ -28,9 +42,9 @@
 
         <div class="col-md-9">
             <div class="tab-content" id="v-tabs-content">
-                @for (int i = 0; i < Model.Count(); i++)
+                @for (int i = 0; i < budgets.Count(); i++)
                 {
-                    var budget = Model.ToList()[i];
+                    var budget = budgets.ToList()[i];
                     <div class="tab-pane fade @(i == 0 ? "show active" : "")" id="@($"v-tab{i}-content")" role="tabpanel">
                         <div class="d-flex justify-content-between">
                             <div>

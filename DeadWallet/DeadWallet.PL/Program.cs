@@ -58,6 +58,7 @@ builder.Services.AddDbContext<DeadWalletContext>(options =>
 builder.Services.AddScoped<IPasswordHasher<DeadWalletUser>, PasswordHasher<DeadWalletUser>>();
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserBudgetRepository, UserBudgetRepository>();
 builder.Services.AddScoped<IBudgetRepository, BudgetRepository>();
 builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 builder.Services.AddScoped<ITagRepository, TagRepository>();

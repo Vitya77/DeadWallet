@@ -54,5 +54,16 @@ namespace DeadWallet.DAL.Repositories
                 await _context.SaveChangesAsync();
             }
         }
+
+        public async Task<List<DeadWalletUser>> SearchUsersAsync(string query)
+        {
+            return await _context.DeadWalletUsers
+                .Where(user =>
+                    user.Username.Contains(query) ||
+                    user.Email.Contains(query) ||
+                    user.FirstName.Contains(query) ||
+                    user.LastName.Contains(query))
+                .ToListAsync();
+        }
     }
 }

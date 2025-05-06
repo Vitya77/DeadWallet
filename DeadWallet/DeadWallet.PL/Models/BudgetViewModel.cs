@@ -10,5 +10,6 @@ namespace DeadWallet.PL.Models
         public decimal Balance { get; set; }
         [Required]
         public string Title { get; set; }
+        public List<int> SelectedUserIds { get; set; } = new List<int>();
     }
 }

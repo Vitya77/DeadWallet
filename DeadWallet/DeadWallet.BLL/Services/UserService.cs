@@ -199,6 +199,38 @@ namespace DeadWallet.BLL.Services
 
             return new Result { Success = true };
         }
+
+        public async Task<Result<List<DeadWalletUser>>> SearchUsers(string query, int userId)
+        {
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                return new Result<List<DeadWalletUser>>
+                {
+                    Success = false,
+                    Message = "Search query cannot be empty."
+                };
+            }
+
+            var users = await _userRepository.SearchUsersAsync(query);
+
+            if (users == null || !users.Any())
+            {
+                return new Result<List<DeadWalletUser>>
+                {
+                    Success = false,
+                    Message = "No users found matching the search criteria."
+                };
+            }
+
+            users.RemoveAll(u => u.Id == userId || u.Id == 1);
+
+            return new Result<List<DeadWalletUser>>
+            {
+                Success = true,
+                Res = users
+            };
+        }
+
     }
 }
 

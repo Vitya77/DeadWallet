@@ -424,4 +424,60 @@ public class UserServiceTests
         _mockUserRepository.Verify(repo => repo.DeleteUserByIdAsync(2), Times.Once);
     }
 
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task SearchUsers_QueryIsNullOrWhiteSpace_ReturnsError(string query)
+    {
+        var result = await _userService.SearchUsers(query, userId: 2);
+
+        Assert.False(result.Success);
+        Assert.Equal("Search query cannot be empty.", result.Message);
+    }
+
+    [Fact]
+    public async Task SearchUsers_NoUsersReturned_ReturnsError()
+    {
+        _mockUserRepository.Setup(r => r.SearchUsersAsync("test")).ReturnsAsync(new List<DeadWalletUser>());
+
+        var result = await _userService.SearchUsers("test", userId: 2);
+
+        Assert.False(result.Success);
+        Assert.Equal("No users found matching the search criteria.", result.Message);
+    }
+
+    [Fact]
+    public async Task SearchUsers_OnlyAdminAndSelfFiltered_ReturnsError()
+    {
+        var users = new List<DeadWalletUser>
+        {
+            new DeadWalletUser { Id = 2, Email = "", FirstName = "", LastName = "", Password = "", Username = "" },
+            new DeadWalletUser { Id = 1, Email = "", FirstName = "", LastName = "", Password = "", Username = "" }
+        };
+        _mockUserRepository.Setup(r => r.SearchUsersAsync("test")).ReturnsAsync(users);
+
+        var result = await _userService.SearchUsers("test", userId: 2);
+
+        Assert.True(result.Success);
+        Assert.Equal(new List<DeadWalletUser> { }, result.Res);
+    }
+
+    [Fact]
+    public async Task SearchUsers_ValidUsersReturned_ReturnsSuccess()
+    {
+        var users = new List<DeadWalletUser>
+        {
+            new DeadWalletUser { Id = 3, Email = "", FirstName = "", LastName = "", Password = "", Username = "" },
+            new DeadWalletUser { Id = 2, Email = "", FirstName = "", LastName = "", Password = "", Username = "" }, // self
+            new DeadWalletUser { Id = 1, Email = "", FirstName = "", LastName = "", Password = "", Username = "" }  // admin
+        };
+        _mockUserRepository.Setup(r => r.SearchUsersAsync("test")).ReturnsAsync(users);
+
+        var result = await _userService.SearchUsers("test", userId: 2);
+
+        Assert.True(result.Success);
+        Assert.Single(result.Res);
+        Assert.Equal(3, result.Res.First().Id);
+    }
 }
