@@ -15,5 +15,6 @@ namespace DeadWallet.DAL.Interfaces
         Task UpdateUserAsync(DeadWalletUser user);
         Task<List<DeadWalletUser>> GetAllUsersAsync();
         Task DeleteUserByIdAsync(int id);
+        Task<List<DeadWalletUser>> SearchUsersAsync(string query);
     }
 }

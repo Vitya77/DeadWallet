@@ -11,7 +11,8 @@ namespace DeadWallet.BLL.Interfaces
     public interface IBudgetService
     {
         public Task<Result<IEnumerable<Budget>>> GetOwnedBudgetsByUserIdAsync(int userId);
-
+        public Task<Result<IEnumerable<Budget>>> GetBudgetsByUserIdAsync(int userId);
         public Task<Result> CreateBudgetAsync(Budget budget);
+        public Task<Result> AddUserToBudgetAsync(int budgetId, int userId);
     }
 }

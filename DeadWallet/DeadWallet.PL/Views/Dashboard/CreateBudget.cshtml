@@ -18,7 +18,22 @@
             <input type="number" class="form-control" id="Balance" name="Balance" value="@Model.Balance" />
             <span asp-validation-for="Balance" class="text-danger"></span>
         </div>
-    
+        <div>
+            <label for="UserSearch">Search Users</label>
+            <input type="text" id="UserSearch" placeholder="Search for users..." oninput="searchUsers()" />
+            <ul id="UserSearchResults"></ul>
+        </div>
+        <div>
+            <label>Selected Users</label>
+            <ul id="SelectedUsers"></ul>
+        </div>
+        <div id="SelectedUserIdsContainer">
+            @foreach (var userId in Model.SelectedUserIds ?? new List<int>())
+            {
+                <input type="hidden" name="SelectedUserIds" value="@userId" />
+            }
+        </div>
+
         @if (!ViewData.ModelState.IsValid)
         {
             <div>
@@ -29,3 +44,67 @@
         <button type="submit" class="btn btn-primary">Create Budget</button>
     </form>
 </section>
+
+<script>
+    async function searchUsers() {
+        const query = document.getElementById('UserSearch').value;
+        if (query.length < 2) {
+            document.getElementById('UserSearchResults').innerHTML = '';
+            return;
+        }
+
+        const response = await fetch(`/Dashboard/SearchUsers?query=${query}`);
+        const users = await response.json();
+
+        const resultsList = document.getElementById('UserSearchResults');
+        resultsList.innerHTML = '';
+
+        users.forEach(user => {
+            const li = document.createElement('li');
+            li.textContent = `${user.firstName} ${user.lastName}`;
+            li.dataset.userId = user.id;
+            li.onclick = () => selectUser(user.id, user.firstName, user.lastName);
+            resultsList.appendChild(li);
+        });
+    }
+
+    function selectUser(userId, firstName, lastName) {
+        const selectedUsersList = document.getElementById('SelectedUsers');
+        const selectedUserIdsContainer = document.getElementById('SelectedUserIdsContainer');
+
+        // Check if the user is already selected
+        if (Array.from(selectedUserIdsContainer.children).some(input => input.value == userId)) {
+            return;
+        }
+
+        // Add user to the selected list
+        const li = document.createElement('li');
+        li.textContent = `${firstName} ${lastName}`;
+        li.dataset.userId = userId;
+        li.onclick = () => removeUser(userId, li);
+        selectedUsersList.appendChild(li);
+
+        // Add hidden input for the selected user ID
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = 'SelectedUserIds';
+        hiddenInput.value = userId;
+        selectedUserIdsContainer.appendChild(hiddenInput);
+    }
+
+
+    function removeUser(userId, listItem) {
+        const selectedUsersList = document.getElementById('SelectedUsers');
+        const selectedUserIdsContainer = document.getElementById('SelectedUserIdsContainer');
+
+        // Remove user from the selected list
+        selectedUsersList.removeChild(listItem);
+
+        // Remove hidden input for the selected user ID
+        const hiddenInput = Array.from(selectedUserIdsContainer.children).find(input => input.value == userId);
+        if (hiddenInput) {
+            selectedUserIdsContainer.removeChild(hiddenInput);
+        }
+    }
+
+</script>
