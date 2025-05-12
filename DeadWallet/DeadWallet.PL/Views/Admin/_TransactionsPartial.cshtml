@@ -1,0 +1,31 @@
+﻿@model IEnumerable<DeadWallet.DAL.Models.Transaction>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Amount</th>
+                <th>Date</th>
+                <th>User</th>
+                <th>Description</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var transaction in Model)
+            {
+            <tr>
+                <td>@transaction.Id</td>
+                <td>@transaction.Amount</td>
+                <td>@transaction.Date.ToString("yyyy-MM-dd")</td>
+                <td>@transaction.UserId</td>
+                <td>@transaction.Description</td>
+                <td>
+                    <form asp-action="DeleteTransaction" method="post" asp-route-id="@transaction.Id">
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            }
+        </tbody>
+    </table>
