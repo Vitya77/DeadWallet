@@ -51,7 +51,7 @@
                                 <h4>@budget.Title</h4>
                                 <p>Current balance: <strong>@budget.Balance.ToString("C")</strong></p>
                             </div>
-                            <a asp-controller="Transaction" asp-action="BudgetTransactions" asp-route-budgetId="@budget.Id" class="btn btn-outline-primary">Transaction History</a>
+                            <a asp-controller="Transaction" asp-action="BudgetTransactions" asp-route-budgetId="@budget.Id" class="btn btn-outline-primary align-self-start">Transaction History</a>
                         </div>
 
                         <form asp-action="AddTransaction" asp-controller="Transaction" method="post" class="mt-4">

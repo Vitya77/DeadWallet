@@ -18,21 +18,21 @@
             <input type="number" class="form-control" id="Balance" name="Balance" value="@Model.Balance" />
             <span asp-validation-for="Balance" class="text-danger"></span>
         </div>
-        <div>
+        <div class="form-group">
             <label for="UserSearch">Search Users</label>
-            <input type="text" id="UserSearch" placeholder="Search for users..." oninput="searchUsers()" />
-            <ul id="UserSearchResults"></ul>
+            <input type="text" class="form-control" id="UserSearch" placeholder="Search for users..." oninput="searchUsers()" autocomplete="off" />
+            <div class="position-relative">
+                <ul id="UserSearchResults" class="list-group position-absolute w-100 z-3"></ul>
+            </div>
         </div>
-        <div>
+
+        <div class="form-group">
             <label>Selected Users</label>
-            <ul id="SelectedUsers"></ul>
+            <div id="SelectedUsers" class="d-flex flex-wrap gap-2"></div>
         </div>
-        <div id="SelectedUserIdsContainer">
-            @foreach (var userId in Model.SelectedUserIds ?? new List<int>())
-            {
-                <input type="hidden" name="SelectedUserIds" value="@userId" />
-            }
-        </div>
+
+        <div id="SelectedUserIdsContainer"></div>
+
 
         @if (!ViewData.ModelState.IsValid)
         {
@@ -48,22 +48,28 @@
 <script>
     async function searchUsers() {
         const query = document.getElementById('UserSearch').value;
+        const resultsList = document.getElementById('UserSearchResults');
+
         if (query.length < 2) {
-            document.getElementById('UserSearchResults').innerHTML = '';
+            resultsList.innerHTML = '';
             return;
         }
 
         const response = await fetch(`/Dashboard/SearchUsers?query=${query}`);
         const users = await response.json();
 
-        const resultsList = document.getElementById('UserSearchResults');
         resultsList.innerHTML = '';
 
         users.forEach(user => {
             const li = document.createElement('li');
+            li.className = 'list-group-item list-group-item-action';
             li.textContent = `${user.firstName} ${user.lastName}`;
             li.dataset.userId = user.id;
-            li.onclick = () => selectUser(user.id, user.firstName, user.lastName);
+            li.onclick = () => {
+                selectUser(user.id, user.firstName, user.lastName);
+                resultsList.innerHTML = ''; // clear results after selection
+                document.getElementById('UserSearch').value = ''; // clear input
+            };
             resultsList.appendChild(li);
         });
     }
@@ -72,19 +78,24 @@
         const selectedUsersList = document.getElementById('SelectedUsers');
         const selectedUserIdsContainer = document.getElementById('SelectedUserIdsContainer');
 
-        // Check if the user is already selected
         if (Array.from(selectedUserIdsContainer.children).some(input => input.value == userId)) {
             return;
         }
 
-        // Add user to the selected list
-        const li = document.createElement('li');
-        li.textContent = `${firstName} ${lastName}`;
-        li.dataset.userId = userId;
-        li.onclick = () => removeUser(userId, li);
-        selectedUsersList.appendChild(li);
+        const badge = document.createElement('span');
+        badge.className = 'badge bg-primary d-flex align-items-center';
+        badge.style.gap = '0.5rem';
+        badge.textContent = `${firstName} ${lastName}`;
 
-        // Add hidden input for the selected user ID
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'btn-close btn-close-white btn-sm';
+        removeBtn.ariaLabel = 'Remove';
+        removeBtn.onclick = () => removeUser(userId, badge);
+
+        badge.appendChild(removeBtn);
+        selectedUsersList.appendChild(badge);
+
         const hiddenInput = document.createElement('input');
         hiddenInput.type = 'hidden';
         hiddenInput.name = 'SelectedUserIds';
@@ -92,19 +103,10 @@
         selectedUserIdsContainer.appendChild(hiddenInput);
     }
 
-
-    function removeUser(userId, listItem) {
-        const selectedUsersList = document.getElementById('SelectedUsers');
+    function removeUser(userId, badgeElement) {
+        badgeElement.remove();
         const selectedUserIdsContainer = document.getElementById('SelectedUserIdsContainer');
-
-        // Remove user from the selected list
-        selectedUsersList.removeChild(listItem);
-
-        // Remove hidden input for the selected user ID
         const hiddenInput = Array.from(selectedUserIdsContainer.children).find(input => input.value == userId);
-        if (hiddenInput) {
-            selectedUserIdsContainer.removeChild(hiddenInput);
-        }
+        if (hiddenInput) hiddenInput.remove();
     }
-
 </script>

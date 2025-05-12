@@ -1,8 +1,31 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Home";
 }
 
 <div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <h1 class="display-4">Welcome to DeadWallet</h1>
+    <p class="lead">A convenient online service for managing personal finances — on your own or together with loved ones.</p>
+
+    <hr />
+
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <h3>📊 Budget Management</h3>
+            <p>Create budgets, expense categories, add income and expenses. Analyze your finances with detailed statistics.</p>
+        </div>
+        <div class="col-md-4">
+            <h3>👥 Shared Tables</h3>
+            <p>Work with budgets together with your family or friends. Grant other users access rights or restrict them.</p>
+        </div>
+        <div class="col-md-4">
+            <h3>🔐 Secure Authentication</h3>
+            <p>Register, log in, edit your profile, and manage your account safely and easily.</p>
+        </div>
+    </div>
+
+    <hr class="my-5" />
+
+    <div class="mt-5">
+        <a class="btn btn-outline-primary btn-lg ms-3" href="/Auth/Login">Get Started</a>
+    </div>
 </div>
