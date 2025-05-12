@@ -42,14 +42,19 @@
 
                     <h4>@tabs[i]</h4>
 
-                        @if (tabs[i] == "Tags")
-                        {
-                            @await Html.PartialAsync("_TagsPartial", Model.tags)
-                        }
-                        else if (tabs[i] == "Users")
-                        {
-                            @await Html.PartialAsync("_UsersPartial", Model.users)
-                        }
+                    @if (tabs[i] == "Tags")
+                    {
+                        @await Html.PartialAsync("_TagsPartial", Model.tags)
+                    }
+                    else if (tabs[i] == "Users")
+                    {
+                        @await Html.PartialAsync("_UsersPartial", Model.users)
+                    }
+                    else if (tabs[i] == "Transactions")
+                    {
+                        @await Html.PartialAsync("_TransactionsPartial", Model.transactions)
+                    }
+
 
                 </div>
                 }
