@@ -13,4 +13,6 @@ public interface ITransactionService
     Task<Result> UpdateTransactionAsync(Transaction transaction);
     Task<Result> DeleteTransactionAsync(int id);
     Task<Result<IEnumerable<Transaction>>> GetTransactionsForBudgetAsync(int budgetId);
+    Task<Result<decimal>> GetTotalIncomeAsync(int budgetId);
+    Task<Result<decimal>> GetTotalExpensesAsync(int budgetId);
 }
