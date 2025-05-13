@@ -57,6 +57,14 @@
                             <a asp-controller="Transaction" asp-action="BudgetTransactions" asp-route-budgetId="@budget.Id" class="btn btn-outline-primary">Transaction History</a>
                         </div>
 
+                        <!-- Графік переміщено сюди -->
+                        <div class="mt-4">
+                            <h5>Income vs Expenses</h5>
+                            <div class="chart-container" style="position: relative; height:300px; width:100%">
+                                <canvas id="chart-@budget.Id"></canvas>
+                            </div>
+                        </div>
+
                         <form asp-action="AddTransaction" asp-controller="Transaction" method="post" class="mt-4">
                             <input type="hidden" name="BudgetId" value="@budget.Id" />
 
@@ -104,13 +112,6 @@
                         {
                             <div class="alert alert-danger mt-3">@TempData["ErrorMessage"]</div>
                         }
-
-                        <div class="mt-4">
-                            <h5>Income vs Expenses</h5>
-                            <div class="chart-container" style="position: relative; height:300px; width:100%">
-                                <canvas id="chart-@budget.Id"></canvas>
-                            </div>
-                        </div>
 
                         <div class="mt-4">
                             <h5>Recent Transactions</h5>
