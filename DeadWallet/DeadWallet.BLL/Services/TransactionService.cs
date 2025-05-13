@@ -118,5 +118,45 @@ namespace DeadWallet.BLL.Services
 
             return new Result<IEnumerable<Transaction>> { Success = true, Res = filteredTransactions };
         }
+
+        public async Task<Result<decimal>> GetTotalIncomeAsync(int budgetId)
+        {
+            try
+            {
+                _logger.LogDebug($"Getting total income for budget ID: {budgetId}");
+
+                var allTransactions = await _transactionRepository.GetAllAsync();
+                var income = allTransactions
+                    .Where(t => t.BudgetId == budgetId && !t.IsExpense)
+                    .Sum(t => t.Amount);
+
+                return new Result<decimal> { Success = true, Res = income };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error getting total income for budget {budgetId}");
+                return new Result<decimal> { Success = false, Message = ex.Message };
+            }
+        }
+
+        public async Task<Result<decimal>> GetTotalExpensesAsync(int budgetId)
+        {
+            try
+            {
+                _logger.LogDebug($"Getting total expenses for budget ID: {budgetId}");
+
+                var allTransactions = await _transactionRepository.GetAllAsync();
+                var expenses = allTransactions
+                    .Where(t => t.BudgetId == budgetId && t.IsExpense)
+                    .Sum(t => t.Amount);
+
+                return new Result<decimal> { Success = true, Res = expenses };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error getting total expenses for budget {budgetId}");
+                return new Result<decimal> { Success = false, Message = ex.Message };
+            }
+        }
     }
 }

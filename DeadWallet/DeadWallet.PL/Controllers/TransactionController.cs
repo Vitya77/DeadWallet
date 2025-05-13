@@ -117,5 +117,24 @@ namespace DeadWallet.PL.Controllers
 
             return View(transactions);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> GetBudgetTotals(int budgetId)
+        {
+            var incomeResult = await _transactionService.GetTotalIncomeAsync(budgetId);
+            var expensesResult = await _transactionService.GetTotalExpensesAsync(budgetId);
+
+            if (!incomeResult.Success || !expensesResult.Success)
+            {
+                return Json(new { success = false, message = "Error getting budget totals" });
+            }
+
+            return Json(new
+            {
+                success = true,
+                income = incomeResult.Res,
+                expenses = expensesResult.Res
+            });
+        }
     }
 }
