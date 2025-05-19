@@ -1,34 +1,36 @@
-﻿using DeadWallet.DAL;
+﻿using DeadWallet.BLL.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using System.Linq;
+using System.Threading.Tasks;
+using DeadWallet.BLL.Models;
 
 public class ProfileController : Controller
 {
-    private readonly DeadWalletContext _context;
+    private readonly UserService _userService;
 
-    public ProfileController(DeadWalletContext context)
+    public ProfileController(UserService userService)
     {
-        _context = context;
+        _userService = userService;
     }
 
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
         var userId = GetCurrentUserId();
         if (userId == null)
             return Unauthorized();
 
-        var user = _context.DeadWalletUsers.Find(userId);
-
-        if (user == null)
+        var result = await _userService.GetUserByIdAsync(userId.Value);
+        if (!result.Success || result.Res == null)
             return NotFound();
 
         var model = new UserProfileViewModel
         {
-            Id = user.Id,
-            FirstName = user.FirstName,
-            LastName = user.LastName,
-            Username = user.Username,
-            Email = user.Email
+            Id = result.Res.Id,
+            FirstName = result.Res.FirstName,
+            LastName = result.Res.LastName,
+            Username = result.Res.Username,
+            Email = result.Res.Email
         };
 
         return View(model);
@@ -36,7 +38,7 @@ public class ProfileController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Index(UserProfileViewModel model)
+    public async Task<IActionResult> Index(UserProfileViewModel model)
     {
         if (!ModelState.IsValid)
             return View(model);
@@ -45,18 +47,22 @@ public class ProfileController : Controller
         if (userId == null || model.Id != userId)
             return Unauthorized();
 
-        var user = _context.DeadWalletUsers.Find(userId);
-        if (user == null)
+        var result = await _userService.GetUserByIdAsync(userId.Value);
+        if (!result.Success || result.Res == null)
             return NotFound();
 
-        if (!string.Equals(user.Username, model.Username, StringComparison.OrdinalIgnoreCase))
-        {
-            bool usernameExists = _context.DeadWalletUsers
-                .Any(u => u.Username == model.Username && u.Id != userId);
+        var user = result.Res;
 
+        if (!string.Equals(user.Username, model.Username, System.StringComparison.OrdinalIgnoreCase))
+        {
+            var allUsers = await _userService.GetAllUsersAsync();
+            if (!allUsers.Success || allUsers.Res == null)
+                return StatusCode(500, "User list failed to load.");
+
+            bool usernameExists = allUsers.Res.Any(u => u.Username == model.Username && u.Id != userId);
             if (usernameExists)
             {
-                ModelState.AddModelError("Username", "Це ім’я користувача вже зайняте.");
+                ModelState.AddModelError("Username", "This username is already taken.");
                 return View(model);
             }
         }
@@ -65,13 +71,11 @@ public class ProfileController : Controller
         user.LastName = model.LastName;
         user.Username = model.Username;
 
-        _context.SaveChanges();
+        await _userService.UpdateUserAsync(user);
 
-        ViewBag.Message = "Профіль оновлено успішно!";
+        ViewBag.Message = "Profile updated successfully!";
         return View(model);
     }
-
-
 
     private int? GetCurrentUserId()
     {
