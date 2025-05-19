@@ -10,5 +10,6 @@ namespace DeadWallet.DAL.Interfaces
     public interface IUserBudgetRepository
     {
         Task AddUserBudgetAsync(UserBudget userBudget);
+        Task RemoveUserBudgetAsync(int userId, int budgetId);
     }
 }

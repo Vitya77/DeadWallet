@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
@@ -9,6 +10,8 @@ namespace DeadWallet.DAL.Models
 {
     public class UserBudget
     {
+        [Key]
+        public int Id { get; set; } 
         [ForeignKey("DeadWalletUser")]
         public int UserId { get; set; }
         public DeadWalletUser User { get; set; } = null!;

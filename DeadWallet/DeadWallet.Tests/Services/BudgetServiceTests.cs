@@ -125,4 +125,162 @@ public class BudgetServiceTests
         Assert.Equal("User not found", result.Message);
     }
 
+    [Fact]
+    public async Task UpdateBudgetAsync_ShouldReturnSuccess_WhenOwnerUpdatesBudget()
+    {
+        var budget = new Budget { Id = 1, Title = "Updated Budget", OwnerId = 1 };
+
+        _budgetRepositoryMock.Setup(repo => repo.UpdateAsync(budget))
+                             .Returns(Task.CompletedTask);
+
+        var result = await _budgetService.UpdateBudgetAsync(budget, 1);
+
+        Assert.True(result.Success);
+    }
+
+    [Fact]
+    public async Task UpdateBudgetAsync_ShouldReturnFailure_WhenBudgetIsNull()
+    {
+        var result = await _budgetService.UpdateBudgetAsync(null, 1);
+
+        Assert.False(result.Success);
+        Assert.Equal("Budget cannot be null.", result.Message);
+    }
+
+    [Fact]
+    public async Task UpdateBudgetAsync_ShouldReturnFailure_WhenUserIsNotOwner()
+    {
+        var budget = new Budget { Id = 1, Title = "Updated Budget", OwnerId = 2 };
+
+        var result = await _budgetService.UpdateBudgetAsync(budget, 1);
+
+        Assert.False(result.Success);
+        Assert.Equal("Only owner of a budget can edit it.", result.Message);
+    }
+
+    [Fact]
+    public async Task GetBudgetByIdAsync_ShouldReturnSuccess_WhenUserIsOwner()
+    {
+        var budget = new Budget { Id = 1, OwnerId = 1, UserBudgets = new List<UserBudget>() };
+
+        _budgetRepositoryMock.Setup(repo => repo.GetBudgetByIdAsync(1))
+                             .ReturnsAsync(budget);
+
+        var result = await _budgetService.GetBudgetByIdAsync(1, 1);
+
+        Assert.True(result.Success);
+        Assert.NotNull(result.Res);
+        Assert.Equal(1, result.Res.Id);
+    }
+
+    [Fact]
+    public async Task GetBudgetByIdAsync_ShouldReturnSuccess_WhenUserIsSharedUser()
+    {
+        var budget = new Budget
+        {
+            Id = 1,
+            OwnerId = 2,
+            UserBudgets = new List<UserBudget>
+        {
+            new UserBudget { UserId = 1, BudgetId = 1 }
+        }
+        };
+
+        _budgetRepositoryMock.Setup(repo => repo.GetBudgetByIdAsync(1))
+                             .ReturnsAsync(budget);
+
+        var result = await _budgetService.GetBudgetByIdAsync(1, 1);
+
+        Assert.True(result.Success);
+        Assert.NotNull(result.Res);
+        Assert.Equal(1, result.Res.Id);
+    }
+
+    [Fact]
+    public async Task GetBudgetByIdAsync_ShouldReturnFailure_WhenBudgetNotFound()
+    {
+        _budgetRepositoryMock.Setup(repo => repo.GetBudgetByIdAsync(1))
+                             .ReturnsAsync((Budget)null);
+
+        var result = await _budgetService.GetBudgetByIdAsync(1, 1);
+
+        Assert.False(result.Success);
+        Assert.Equal("Budget not found", result.Message);
+    }
+
+    [Fact]
+    public async Task GetBudgetByIdAsync_ShouldReturnFailure_WhenUserHasNoAccess()
+    {
+        var budget = new Budget
+        {
+            Id = 1,
+            OwnerId = 2,
+            UserBudgets = new List<UserBudget>() // No access
+        };
+
+        _budgetRepositoryMock.Setup(repo => repo.GetBudgetByIdAsync(1))
+                             .ReturnsAsync(budget);
+
+        var result = await _budgetService.GetBudgetByIdAsync(1, 1);
+
+        Assert.False(result.Success);
+        Assert.Equal("You do not have access to this budget", result.Message);
+    }
+
+    [Fact]
+    public async Task RemoveUsersFromBudget_ShouldReturnSuccess_WhenOwnerRemovesUsers()
+    {
+        var budget = new Budget
+        {
+            Id = 1,
+            OwnerId = 1,
+            UserBudgets = new List<UserBudget>
+        {
+            new UserBudget { UserId = 2, BudgetId = 1 },
+            new UserBudget { UserId = 3, BudgetId = 1 }
+        }
+        };
+
+        _budgetRepositoryMock.Setup(repo => repo.GetBudgetByIdAsync(1))
+                             .ReturnsAsync(budget);
+
+        _userBudgetRepositoryMock.Setup(repo => repo.RemoveUserBudgetAsync(It.IsAny<int>(), It.IsAny<int>()))
+                                 .Returns(Task.CompletedTask);
+
+        var result = await _budgetService.RemoveUsersFromBudget(1, 1);
+
+        Assert.True(result.Success);
+    }
+
+    [Fact]
+    public async Task RemoveUsersFromBudget_ShouldReturnFailure_WhenBudgetNotFound()
+    {
+        _budgetRepositoryMock.Setup(repo => repo.GetBudgetByIdAsync(1))
+                             .ReturnsAsync((Budget)null);
+
+        var result = await _budgetService.RemoveUsersFromBudget(1, 1);
+
+        Assert.False(result.Success);
+        Assert.Equal("Budget not found", result.Message);
+    }
+
+    [Fact]
+    public async Task RemoveUsersFromBudget_ShouldReturnFailure_WhenUserIsNotOwner()
+    {
+        var budget = new Budget
+        {
+            Id = 1,
+            OwnerId = 2, // Not the same as userId
+            UserBudgets = new List<UserBudget>()
+        };
+
+        _budgetRepositoryMock.Setup(repo => repo.GetBudgetByIdAsync(1))
+                             .ReturnsAsync(budget);
+
+        var result = await _budgetService.RemoveUsersFromBudget(1, 1);
+
+        Assert.False(result.Success);
+        Assert.Equal("Only owner of a budget can remove users from it.", result.Message);
+    }
+
 }

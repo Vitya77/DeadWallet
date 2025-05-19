@@ -24,5 +24,16 @@ namespace DeadWallet.DAL.Repositories
             await _context.SaveChangesAsync();
         }
 
+        public async Task RemoveUserBudgetAsync(int userId, int budgetId)
+        { 
+            var userBudget = await _context.UserBudgets
+                .SingleOrDefaultAsync(ub => ub.UserId == userId && ub.BudgetId == budgetId);
+
+            if (userBudget != null)
+            {
+                _context.UserBudgets.Remove(userBudget);
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }

@@ -167,6 +167,18 @@ namespace DeadWallet.BLL.Services
             return new Result { Success = true, Message = "User deleted successfully" };
         }
 
+        public async Task<Result<DeadWalletUser>> GetUserByIdAsync(int id)
+        {
+            var user = await _userRepository.FindUserByIdAsync(id);
+
+            if (user == null)
+            {
+                return new Result<DeadWalletUser> { Success = false, Message = "User not found" };
+            }
+
+            return new Result<DeadWalletUser> { Success = true, Res = user };
+        }
+
         public async Task<Result> sendOtpAsync(string email)
         {
             var otpCode = RandomNumberGenerator.GetInt32(100000, 999999).ToString();

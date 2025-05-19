@@ -26,11 +26,11 @@
                         @for (int i = 0; i < ownedBudgets; i++)
                         {
                             <a class="list-group-item list-group-item-action @(i == 0 ? "active" : "")"
-                               id="@($"v-tab{i}")"
-                               data-bs-toggle="list"
-                               href="@($"#v-tab{i}-content")"
-                               role="tab"
-                               aria-controls="@($"v-tab{i}-content")">
+                            id="@($"v-tab{i}")"
+                            data-bs-toggle="list"
+                            href="@($"#v-tab{i}-content")"
+                            role="tab"
+                            aria-controls="@($"v-tab{i}-content")">
                                 @budgets[i].Title
                             </a>
                         }
@@ -41,11 +41,11 @@
                         @for (int i = ownedBudgets; i < budgets.Count; i++)
                         {
                             <a class="list-group-item list-group-item-action"
-                               id="@($"v-tab{i}")"
-                               data-bs-toggle="list"
-                               href="@($"#v-tab{i}-content")"
-                               role="tab"
-                               aria-controls="@($"v-tab{i}-content")">
+                            id="@($"v-tab{i}")"
+                            data-bs-toggle="list"
+                            href="@($"#v-tab{i}-content")"
+                            role="tab"
+                            aria-controls="@($"v-tab{i}-content")">
                                 @budgets[i].Title
                             </a>
                         }
@@ -62,16 +62,26 @@
                 {
                     var budget = budgets[i];
                     <div class="tab-pane fade @(i == 0 ? "show active" : "")"
-                         id="@($"v-tab{i}-content")"
-                         role="tabpanel"
-                         aria-labelledby="@($"v-tab{i}")">
+                    id="@($"v-tab{i}-content")"
+                    role="tabpanel"
+                    aria-labelledby="@($"v-tab{i}")">
                         <div class="card mb-4">
                             <div class="card-body d-flex justify-content-between align-items-center">
                                 <div>
                                     <h4 class="card-title mb-1">@budget.Title</h4>
                                     <p class="card-text">Current Balance: <strong>@budget.Balance.ToString("C")</strong></p>
                                 </div>
-                                <a asp-controller="Transaction" asp-action="BudgetTransactions" asp-route-budgetId="@budget.Id" class="btn btn-outline-primary">Transaction History</a>
+                                <div>
+                                    <a asp-controller="Transaction" asp-action="BudgetTransactions" asp-route-budgetId="@budget.Id" class="btn btn-outline-primary">
+                                        <i class="bi bi-clock-history"></i>
+                                    </a>
+                                    @if (i < ownedBudgets)
+                                    {
+                                        <a asp-controller="Dashboard" asp-action="Settings" asp-route-budgetId="@budget.Id" class="btn btn-outline-primary">
+                                            <i class="bi bi-sliders2"></i>
+                                        </a>
+                                    }
+                                </div>
                             </div>
                         </div>
 
