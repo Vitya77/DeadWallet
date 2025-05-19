@@ -5,6 +5,7 @@ namespace DeadWallet.PL.Models
 {
     public class BudgetViewModel
     {
+        public int Id { get; set; }
         [Required]
         [Column(TypeName = "decimal(18,2)")]
         public decimal Balance { get; set; }

@@ -84,5 +84,81 @@ namespace DeadWallet.BLL.Services
             return new Result { Success = true };
         }
 
+        public async Task<Result> UpdateBudgetAsync(Budget budget, int userId)
+        {
+            if (budget == null)
+            {
+                return new Result
+                {
+                    Success = false,
+                    Message = "Budget cannot be null."
+                };
+            }
+
+            if (userId != budget.OwnerId)
+            {
+                return new Result
+                {
+                    Success = false,
+                    Message = "Only owner of a budget can edit it."
+                };
+            }
+
+            await _budgetRepository.UpdateAsync(budget);
+            return new Result
+            {
+                Success = true
+            };
+        }
+
+        public async Task<Result<Budget>> GetBudgetByIdAsync(int budgetId, int userId)
+        {
+            var budget = await _budgetRepository.GetBudgetByIdAsync(budgetId);
+
+            if (budget == null)
+            {
+                return new Result<Budget>
+                {
+                    Success = false,
+                    Message = "Budget not found"
+                };
+            }
+
+            if (budget.OwnerId != userId && budget.UserBudgets.All(userBudget => userBudget.UserId != userId))
+            {
+                return new Result<Budget>
+                {
+                    Success = false,
+                    Message = "You do not have access to this budget"
+                };  
+            }
+
+            return new Result<Budget>
+            {
+                Success = true,
+                Res = budget
+            };
+        }
+
+        public async Task<Result> RemoveUsersFromBudget(int budgetId, int userId)
+        {
+            var budget = await _budgetRepository.GetBudgetByIdAsync(budgetId);
+            if (budget == null)
+            {
+                return new Result { Success = false, Message = "Budget not found" };
+            }
+
+            if (budget.OwnerId != userId)
+            {
+                return new Result { Success = false, Message = "Only owner of a budget can remove users from it." };
+            }
+
+            foreach (var userBudget in budget.UserBudgets.ToList())
+            {
+                await _userBudgetRepository.RemoveUserBudgetAsync(userBudget.UserId, userBudget.BudgetId);
+            }
+            
+            return new Result { Success = true };
+        }
     }
 }

@@ -1,0 +1,128 @@
+﻿@model DeadWallet.PL.Models.BudgetViewModel
+
+@{
+    ViewData["Title"] = "Update Budget";
+}
+
+<section>
+    <h2>Settings of @Model.Title</h2>
+
+    <form method="post" asp-action="UpdateBudget" asp-route-budgetId="" class="d-flex flex-column gap-3">
+        <input type="hidden" class="form-control" id="Id" name="Id" value="@Model.Id" />
+        <div class="form-group">
+            <label for="Title">Title</label>
+            <input type="text" class="form-control" id="Title" name="Title" value="@Model.Title" />
+            <span asp-validation-for="Title" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label for="Balance">Starting balance</label>
+            <input asp-for ="Balance" type="number" class="form-control" id="Balance" name="Balance" />
+            <span asp-validation-for="Balance" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label for="UserSearch">Search Users</label>
+            <input type="text" class="form-control" id="UserSearch" placeholder="Search for users..." oninput="searchUsers()" autocomplete="off" />
+            <div class="position-relative">
+                <ul id="UserSearchResults" class="list-group position-absolute w-100 z-3"></ul>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Selected Users</label>
+            <div id="SelectedUsers" class="d-flex flex-wrap gap-2"></div>
+        </div>
+
+        <div id="SelectedUserIdsContainer"></div>
+
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div>
+                @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+            </div>
+        }
+
+        <button type="submit" class="btn btn-primary">Update Budget</button>
+    </form>
+</section>
+
+<script>
+    async function searchUsers() {
+        const query = document.getElementById('UserSearch').value;
+        const resultsList = document.getElementById('UserSearchResults');
+
+        if (query.length < 2) {
+            resultsList.innerHTML = '';
+            return;
+        }
+
+        const response = await fetch(`/Dashboard/SearchUsers?query=${query}`);
+        const users = await response.json();
+
+        resultsList.innerHTML = '';
+
+        users.forEach(user => {
+            const li = document.createElement('li');
+            li.className = 'list-group-item list-group-item-action';
+            li.textContent = `${user.firstName} ${user.lastName}`;
+            li.dataset.userId = user.id;
+            li.onclick = () => {
+                selectUser(user.id, user.firstName, user.lastName);
+                resultsList.innerHTML = ''; // clear results after selection
+                document.getElementById('UserSearch').value = ''; // clear input
+            };
+            resultsList.appendChild(li);
+        });
+    }
+
+    function selectUser(userId, firstName, lastName) {
+        const selectedUsersList = document.getElementById('SelectedUsers');
+        const selectedUserIdsContainer = document.getElementById('SelectedUserIdsContainer');
+
+        if (Array.from(selectedUserIdsContainer.children).some(input => input.value == userId)) {
+            return;
+        }
+
+        const badge = document.createElement('span');
+        badge.className = 'badge bg-primary d-flex align-items-center';
+        badge.style.gap = '0.5rem';
+        badge.textContent = `${firstName} ${lastName}`;
+
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'btn-close btn-close-white btn-sm';
+        removeBtn.ariaLabel = 'Remove';
+        removeBtn.onclick = () => removeUser(userId, badge);
+
+        badge.appendChild(removeBtn);
+        selectedUsersList.appendChild(badge);
+
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = 'SelectedUserIds';
+        hiddenInput.value = userId;
+        selectedUserIdsContainer.appendChild(hiddenInput);
+    }
+
+    function removeUser(userId, badgeElement) {
+        badgeElement.remove();
+        const selectedUserIdsContainer = document.getElementById('SelectedUserIdsContainer');
+        const hiddenInput = Array.from(selectedUserIdsContainer.children).find(input => input.value == userId);
+        if (hiddenInput) hiddenInput.remove();
+    }
+
+    async function loadUsers() {
+        if (@Model.SelectedUserIds.Count() < 1) {
+            return;
+        }
+
+        const response = await fetch(`/Dashboard/FindUsers?usersId=${@(Model.SelectedUserIds.Count() < 1 ? "0" : string.Join(",", Model.SelectedUserIds))}`);
+        const users = await response.json();
+
+        users.forEach(user => {
+            selectUser(user.id, user.firstName, user.lastName);
+        });
+    }
+
+    loadUsers();
+</script>

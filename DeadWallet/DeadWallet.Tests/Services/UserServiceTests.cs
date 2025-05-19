@@ -480,4 +480,37 @@ public class UserServiceTests
         Assert.Single(result.Res);
         Assert.Equal(3, result.Res.First().Id);
     }
+
+    [Fact]
+    public async Task GetUserByIdAsync_UserExists_ReturnsSuccessResult()
+    {
+        var userId = 1;
+        var expectedUser = new DeadWalletUser { Id = userId, Email = "", FirstName = "", LastName = "", Password = "", Username = "" };
+
+        _mockUserRepository
+            .Setup(repo => repo.FindUserByIdAsync(userId))
+            .ReturnsAsync(expectedUser);
+
+        var result = await _userService.GetUserByIdAsync(userId);
+
+        Assert.True(result.Success);
+        Assert.Equal(expectedUser, result.Res);
+        Assert.Null(result.Message);
+    }
+
+    [Fact]
+    public async Task GetUserByIdAsync_UserDoesNotExist_ReturnsFailureResult()
+    {
+        var userId = 2;
+
+        _mockUserRepository
+            .Setup(repo => repo.FindUserByIdAsync(userId))
+            .ReturnsAsync((DeadWalletUser)null);
+
+        var result = await _userService.GetUserByIdAsync(userId);
+
+        Assert.False(result.Success);
+        Assert.Null(result.Res);
+        Assert.Equal("User not found", result.Message);
+    }
 }
