@@ -244,19 +244,6 @@ namespace DeadWallet.BLL.Services
             };
         }
 
-        public async Task<Result<DeadWalletUser>> GetUserByIdAsync(int id)
-        {
-            var user = await _userRepository.FindUserByIdAsync(id);
-
-            if (user == null)
-            {
-                return new Result<DeadWalletUser> { Success = false, Message = "User not found" };
-            }
-
-            return new Result<DeadWalletUser> { Success = true, Res = user };
-        }
-
-
         public async Task<Result> UpdateUserAsync(DeadWalletUser user)
         {
             var existingUser = await _userRepository.FindUserByUsernameAsync(user.Username);
