@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Http;
 using DeadWallet.BLL.Interfaces;
 using System.Security.Cryptography;
+using Microsoft.EntityFrameworkCore;
 
 namespace DeadWallet.BLL.Services
 {
@@ -27,8 +28,8 @@ namespace DeadWallet.BLL.Services
         private readonly IEmailService _emailService;
 
         public UserService(
-            IUserRepository userRepository, 
-            IPasswordHasher<DeadWalletUser> passwordHasher, 
+            IUserRepository userRepository,
+            IPasswordHasher<DeadWalletUser> passwordHasher,
             IConfiguration configuration,
             IEmailOtpRepository otpRepository,
             IEmailService emailService)
@@ -112,8 +113,8 @@ namespace DeadWallet.BLL.Services
         {
             httpContextAccessor.HttpContext?.Response.Cookies.Delete("AuthToken");
         }
-        
-        
+
+
         public async Task<string> LoginAsync(LoginModel model)
         {
             // Find the user by username
@@ -243,8 +244,19 @@ namespace DeadWallet.BLL.Services
             return new Result<DeadWalletUser> { Success = true, Res = user };
         }
 
+
         public async Task<Result> UpdateUserAsync(DeadWalletUser user)
         {
+            var existingUser = await _userRepository.FindUserByUsernameAsync(user.Username);
+            if (existingUser != null && existingUser.Id != user.Id)
+            {
+                return new Result
+                {
+                    Success = false,
+                    Message = "This username is already taken."
+                };
+            }
+
             await _userRepository.UpdateUserAsync(user);
             return new Result { Success = true };
         }

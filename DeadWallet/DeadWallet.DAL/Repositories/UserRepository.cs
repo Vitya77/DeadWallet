@@ -65,5 +65,10 @@ namespace DeadWallet.DAL.Repositories
                     user.LastName.Contains(query))
                 .ToListAsync();
         }
+
+        public async Task<DeadWalletUser?> FindUserByUsernameAsync(string username)
+        {
+            return await _context.DeadWalletUsers.FirstOrDefaultAsync(u => u.Username.ToLower() == username.ToLower());
+        }
     }
 }

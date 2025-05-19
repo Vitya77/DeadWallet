@@ -47,35 +47,26 @@ public class ProfileController : Controller
         if (userId == null || model.Id != userId)
             return Unauthorized();
 
-        var result = await _userService.GetUserByIdAsync(userId.Value);
-        if (!result.Success || result.Res == null)
+        var userResult = await _userService.GetUserByIdAsync(userId.Value);
+        if (!userResult.Success || userResult.Res == null)
             return NotFound();
 
-        var user = result.Res;
-
-        if (!string.Equals(user.Username, model.Username, System.StringComparison.OrdinalIgnoreCase))
-        {
-            var allUsers = await _userService.GetAllUsersAsync();
-            if (!allUsers.Success || allUsers.Res == null)
-                return StatusCode(500, "User list failed to load.");
-
-            bool usernameExists = allUsers.Res.Any(u => u.Username == model.Username && u.Id != userId);
-            if (usernameExists)
-            {
-                ModelState.AddModelError("Username", "This username is already taken.");
-                return View(model);
-            }
-        }
-
+        var user = userResult.Res;
         user.FirstName = model.FirstName;
         user.LastName = model.LastName;
         user.Username = model.Username;
 
-        await _userService.UpdateUserAsync(user);
+        var updateResult = await _userService.UpdateUserAsync(user);
+        if (!updateResult.Success)
+        {
+            ModelState.AddModelError("Username", updateResult.Message ?? "Failed to update profile.");
+            return View(model);
+        }
 
         ViewBag.Message = "Profile updated successfully!";
         return View(model);
     }
+ 
 
     private int? GetCurrentUserId()
     {
