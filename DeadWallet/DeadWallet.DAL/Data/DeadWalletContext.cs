@@ -58,6 +58,12 @@ namespace DeadWallet.DAL
                 .HasOne(t => t.Budget)
                 .WithMany(b => b.Transactions)
                 .HasForeignKey(t => t.BudgetId);
+
+            modelBuilder.Entity<Transaction>()
+                .HasOne(t => t.Tag)
+                .WithMany()
+                .HasForeignKey(t => t.TagId)
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }
