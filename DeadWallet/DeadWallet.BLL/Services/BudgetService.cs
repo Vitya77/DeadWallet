@@ -158,7 +158,47 @@ namespace DeadWallet.BLL.Services
                 await _userBudgetRepository.RemoveUserBudgetAsync(userBudget.UserId, userBudget.BudgetId);
             }
             
+
+
             return new Result { Success = true };
+
         }
+        public async Task<Result> DeleteBudgetAsync(int budgetId, int userId)
+        {
+            var budget = await _budgetRepository.GetBudgetByIdAsync(budgetId);
+            if (budget == null)
+            {
+                return new Result
+                {
+                    Success = false,
+                    Message = "Budget not found"
+                };
+            }
+
+            if (budget.OwnerId != userId)
+            {
+                return new Result
+                {
+                    Success = false,
+                    Message = "Only the owner can delete this budget."
+                };
+            }
+
+            var deleted = await _budgetRepository.DeleteBudgetAsync(budgetId);
+            if (!deleted)
+            {
+                return new Result
+                {
+                    Success = false,
+                    Message = "Failed to delete budget."
+                };
+            }
+
+            return new Result
+            {
+                Success = true
+            };
+        }
+
     }
 }

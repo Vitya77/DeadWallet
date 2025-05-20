@@ -282,5 +282,70 @@ public class BudgetServiceTests
         Assert.False(result.Success);
         Assert.Equal("Only owner of a budget can remove users from it.", result.Message);
     }
+    [Fact]
+    public async Task DeleteBudgetAsync_ShouldReturnSuccess_WhenUserIsOwnerAndBudgetIsDeleted()
+    {
+        int budgetId = 1;
+        int userId = 1;
+
+        var budget = new Budget { Id = budgetId, OwnerId = userId };
+
+        _budgetRepositoryMock.Setup(repo => repo.GetBudgetByIdAsync(budgetId))
+                             .ReturnsAsync(budget);
+        _budgetRepositoryMock.Setup(repo => repo.DeleteBudgetAsync(budgetId))
+                             .ReturnsAsync(true);
+
+        var result = await _budgetService.DeleteBudgetAsync(budgetId, userId);
+
+        Assert.True(result.Success);
+        Assert.Null(result.Message);
+    }
+    [Fact]
+    public async Task DeleteBudgetAsync_ShouldReturnFailure_WhenBudgetNotFound()
+    {
+        int budgetId = 1;
+        int userId = 1;
+
+        _budgetRepositoryMock.Setup(repo => repo.GetBudgetByIdAsync(budgetId))
+                             .ReturnsAsync((Budget)null);
+
+        var result = await _budgetService.DeleteBudgetAsync(budgetId, userId);
+
+        Assert.False(result.Success);
+        Assert.Equal("Budget not found", result.Message);
+    }
+    [Fact]
+    public async Task DeleteBudgetAsync_ShouldReturnFailure_WhenUserIsNotOwner()
+    {
+        int budgetId = 1;
+        int userId = 1;
+        var budget = new Budget { Id = budgetId, OwnerId = 2 }; // owner ≠ userId
+
+        _budgetRepositoryMock.Setup(repo => repo.GetBudgetByIdAsync(budgetId))
+                             .ReturnsAsync(budget);
+
+        var result = await _budgetService.DeleteBudgetAsync(budgetId, userId);
+
+        Assert.False(result.Success);
+        Assert.Equal("Only the owner can delete this budget.", result.Message);
+    }
+    [Fact]
+    public async Task DeleteBudgetAsync_ShouldReturnFailure_WhenRepositoryFailsToDelete()
+    {
+        int budgetId = 1;
+        int userId = 1;
+        var budget = new Budget { Id = budgetId, OwnerId = userId };
+
+        _budgetRepositoryMock.Setup(repo => repo.GetBudgetByIdAsync(budgetId))
+                             .ReturnsAsync(budget);
+        _budgetRepositoryMock.Setup(repo => repo.DeleteBudgetAsync(budgetId))
+                             .ReturnsAsync(false); // симуляція помилки
+
+        var result = await _budgetService.DeleteBudgetAsync(budgetId, userId);
+
+        Assert.False(result.Success);
+        Assert.Equal("Failed to delete budget.", result.Message);
+    }
+
 
 }

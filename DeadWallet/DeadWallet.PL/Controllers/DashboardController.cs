@@ -298,5 +298,31 @@ namespace DeadWallet.PL.Controllers
 
             return Json(users);
         }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize]
+        public async Task<IActionResult> DeleteBudget(int budgetId)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null || !int.TryParse(userId, out int parsedUserId))
+            {
+                _logger.LogWarning("User ID not found or invalid in JWT");
+                return Redirect("/Home");
+            }
+
+            var result = await _budgetService.DeleteBudgetAsync(budgetId, parsedUserId);
+
+            if (!result.Success)
+            {
+                _logger.LogError($"Failed to delete budget: {result.Message}");
+                TempData["ErrorMessage"] = result.Message;
+                return RedirectToAction("Settings", new { budgetId = budgetId });
+            }
+
+            _logger.LogInformation("Budget deleted successfully");
+            return RedirectToAction("Index");
+        }
+
     }
 }
