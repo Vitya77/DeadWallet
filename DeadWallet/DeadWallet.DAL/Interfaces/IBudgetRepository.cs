@@ -6,6 +6,7 @@ namespace DeadWallet.DAL.Interfaces
 {
     public interface IBudgetRepository
     {
+
         Task<Budget?> GetBudgetByIdAsync(int budgetId);
         Task<Budget?> GetByIdAsync(int id);
         Task<Budget?> GetBudgetWithTransactionsAsync(int budgetId); // Новий метод
@@ -13,5 +14,6 @@ namespace DeadWallet.DAL.Interfaces
         Task<IEnumerable<Budget>> GetBudgetsByUserIdAsync(int userId);
         Task<IEnumerable<Budget>> GetOwnedBudgetsByUserIdAsync(int userId);
         Task CreateBudgetAsync(Budget budget);
+        Task<bool> DeleteBudgetAsync(int id);
     }
 }

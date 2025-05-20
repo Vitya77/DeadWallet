@@ -12,6 +12,18 @@ namespace DeadWallet.DAL.Repositories
         {
             _context = context;
         }
+        public async Task<bool> DeleteBudgetAsync(int id)
+        {
+            var budget = await _context.Budgets.FindAsync(id);
+            if (budget == null)
+            {
+                return false;
+            }
+
+            _context.Budgets.Remove(budget);
+            await _context.SaveChangesAsync();
+            return true;
+        }
 
         public async Task<Budget?> GetByIdAsync(int id)
         {
